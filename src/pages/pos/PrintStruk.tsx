@@ -41,6 +41,17 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
                   : "Take-away"}
               </span>
             </div>
+          
+            <div className="flex justify-between text-xs">
+              <span>Metode:</span>
+              <span className="uppercase">{order.payment_method}</span>
+            </div>
+            <div className="flex justify-between text-xs mb-2">
+              <span>Status:</span>
+              <span className="font-bold">
+                {order.is_paid ? "LUNAS" : "BELUM BAYAR"}
+              </span>
+            </div>
             <div className="flex justify-between">
               <span>Pelanggan:</span>
               <span>{order.customer_name}</span>

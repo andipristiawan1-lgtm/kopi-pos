@@ -10,6 +10,8 @@ type Order = {
   customer_name: string;
   status: string;
   total_amount: number;
+  payment_method: string;
+  is_paid: boolean;
   created_at: number;
   items: { name: string; quantity: number }[];
 };
@@ -60,11 +62,21 @@ export default function PosDashboard() {
     fetchOrders();
   };
 
+  // Fungsi BARU untuk menandai Lunas
+  const markAsPaid = async (id: number) => {
+    const apiUrl = import.meta.env.DEV
+      ? `http://127.0.0.1:8788/api/orders/${id}/pay`
+      : `/api/orders/${id}/pay`;
+
+    await fetch(apiUrl, { method: "PATCH" });
+    fetchOrders();
+  };
+
   if (loading) return <div className="p-10 text-center">Memuat antrean...</div>;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* HEADER YANG SUDAH DIRAPIKAN */}
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold text-coffee-900">
           Dashboard Kasir (POS)
@@ -139,39 +151,63 @@ export default function PosDashboard() {
                 <p className="text-gray-600 mb-2">
                   Oleh: {order.customer_name}
                 </p>
-                <ul className="list-disc pl-4 text-coffee-700">
+                <ul className="list-disc pl-4 text-coffee-700 mb-3">
                   {order.items.map((item, idx) => (
                     <li key={idx}>
                       {item.quantity}x {item.name}
                     </li>
                   ))}
                 </ul>
+
+                {/* INFO METODE PEMBAYARAN */}
+                <div className="border-t border-coffee-200 pt-2 flex justify-between text-xs">
+                  <span className="text-gray-500">Metode:</span>
+                  <span className="font-bold uppercase text-coffee-700">
+                    {order.payment_method}
+                  </span>
+                </div>
               </div>
 
-              <div className="flex justify-between items-center border-t pt-4 mt-auto">
-                <span className="font-bold text-coffee-900">
-                  Rp {order.total_amount.toLocaleString("id-ID")}
-                </span>
+              <div className="flex flex-col border-t pt-4 mt-auto gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-coffee-900">
+                    Rp {order.total_amount.toLocaleString("id-ID")}
+                  </span>
+                  <span
+                    className={`text-xs font-bold px-2 py-1 rounded ${order.is_paid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                  >
+                    {order.is_paid ? "✓ Lunas" : "Belum Bayar"}
+                  </span>
+                </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full mt-1">
                   <button
                     onClick={() => setSelectedOrder(order)}
-                    className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-bold hover:bg-gray-200"
+                    className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-bold hover:bg-gray-200 flex-1"
                   >
                     Struk
                   </button>
 
+                  {!order.is_paid && (
+                    <button
+                      onClick={() => markAsPaid(order.id)}
+                      className="bg-blue-500 text-white px-3 py-2 rounded text-sm font-bold hover:bg-blue-600 flex-1"
+                    >
+                      Terima Bayar
+                    </button>
+                  )}
+
                   {order.status === "pending" ? (
                     <button
                       onClick={() => updateStatus(order.id, "preparing")}
-                      className="bg-red-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-red-600"
+                      className="bg-red-500 text-white px-3 py-2 rounded text-sm font-bold hover:bg-red-600 flex-1"
                     >
                       Proses
                     </button>
                   ) : (
                     <button
                       onClick={() => updateStatus(order.id, "completed")}
-                      className="bg-green-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-green-600"
+                      className="bg-green-500 text-white px-3 py-2 rounded text-sm font-bold hover:bg-green-600 flex-1"
                     >
                       Selesai
                     </button>
