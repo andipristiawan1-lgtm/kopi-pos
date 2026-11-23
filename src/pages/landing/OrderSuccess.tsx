@@ -82,131 +82,152 @@ export default function OrderSuccess() {
   const totalTagihan = orderData.total_amount;
 
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 py-12">
-      <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md w-full border-t-4 border-green-500">
-        <div className="text-6xl mb-4">✅</div>
-        <h1 className="text-2xl font-bold text-coffee-900 mb-2">
-          Pesanan Berhasil!
-        </h1>
-        <p className="text-gray-600 mb-6">
-          Silakan selesaikan pembayaran Anda.
-        </p>
-        <div className="bg-coffee-50 p-4 rounded-lg mb-6">
-          <p className="text-sm text-coffee-700 mb-1">Nomor Pesanan:</p>
-          <p className="text-xl font-mono font-bold text-coffee-900">
-            {orderNumber}
+    <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 py-12 bg-gray-50">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        {/* Header Status */}
+        <div className="bg-green-500 p-6 text-center text-white">
+          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-green-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="3"
+                d="M5 13l4 4L19 7"
+              ></path>
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold mb-1">Pesanan Berhasil!</h1>
+          <p className="text-green-100 text-sm">
+            Terima kasih, pesanan Anda telah kami terima.
           </p>
         </div>
 
-        {orderData.payment_method !== "cash" ? (
-          <div className="bg-yellow-50 rounded-lg border border-yellow-200 mb-6 text-left overflow-hidden">
-            <div className="bg-yellow-100 p-3 border-b border-yellow-200">
-              <p className="text-xs text-yellow-800 font-medium">
-                Total yang harus dibayar:
-              </p>
-              <div className="flex justify-between items-center mt-1">
-                <p className="text-2xl font-bold text-yellow-900">
-                  Rp {totalTagihan.toLocaleString("id-ID")}
-                </p>
-                <button
-                  onClick={() => handleCopy(totalTagihan.toString(), "nominal")}
-                  className="text-xs bg-white text-yellow-800 px-2 py-1 rounded border border-yellow-300 font-bold hover:bg-yellow-50"
-                >
-                  {copiedText === "nominal" ? "✓ Tersalin" : "Copy Nominal"}
-                </button>
-              </div>
-              <p className="text-xs text-yellow-700 mt-1">
-                *Termasuk kode unik <strong>{orderData.unique_code}</strong>
-              </p>
-            </div>
-            <div className="p-4">
-              <p className="text-sm font-bold text-gray-800 mb-2">
-                Tujuan{" "}
-                {orderData.payment_method === "transfer"
-                  ? "Transfer"
-                  : orderData.payment_method === "ewallet"
-                    ? "E-Wallet"
-                    : "QRIS"}
-                :
-              </p>
-              {orderData.payment_method === "transfer" && (
+        <div className="p-6">
+          {/* Nomor Pesanan */}
+          <div className="bg-gray-100 rounded-lg p-4 text-center mb-6 border border-gray-200">
+            <p className="text-xs text-gray-500 mb-1">Nomor Pesanan</p>
+            <p className="text-xl font-mono font-bold text-gray-800 tracking-wider">
+              {orderNumber}
+            </p>
+          </div>
+
+          {/* DETAIL PEMBAYARAN (Modern & Ringkas) */}
+          {orderData.payment_method !== "cash" ? (
+            <div className="border border-yellow-300 rounded-xl overflow-hidden mb-6">
+              <div className="bg-yellow-50 px-4 py-3 border-b border-yellow-200 flex justify-between items-center">
                 <div>
-                  <p className="text-sm">
-                    Bank: <strong>{store.bank_name}</strong>
+                  <p className="text-xs text-yellow-700 font-medium">
+                    Total Tagihan
                   </p>
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-lg font-mono font-bold text-gray-900">
-                      {store.bank_account}
-                    </p>
-                    <button
-                      onClick={() => handleCopy(store.bank_account, "rekening")}
-                      className="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded font-bold hover:bg-gray-300"
-                    >
-                      {copiedText === "rekening"
-                        ? "✓ Tersalin"
-                        : "Copy No. Rek"}
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    A/N: {store.bank_owner}
+                  <p className="text-xl font-bold text-yellow-900">
+                    Rp {totalTagihan.toLocaleString("id-ID")}
+                  </p>
+                  <p className="text-[10px] text-yellow-600 mt-1">
+                    Termasuk kode unik{" "}
+                    <span className="font-bold">{orderData.unique_code}</span>
                   </p>
                 </div>
-              )}
-              {orderData.payment_method === "ewallet" && (
-                <div>
-                  <p className="text-sm">
-                    E-Wallet: <strong>{store.ewallet_name}</strong>
-                  </p>
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-lg font-mono font-bold text-gray-900">
-                      {store.ewallet_number}
-                    </p>
+                <button
+                  onClick={() => handleCopy(totalTagihan.toString(), "nominal")}
+                  className="bg-white text-yellow-800 text-xs px-3 py-1.5 rounded-md border border-yellow-300 font-bold hover:bg-yellow-100 transition"
+                >
+                  {copiedText === "nominal" ? "✓ Tersalin" : "Copy"}
+                </button>
+              </div>
+
+              <div className="bg-white p-4">
+                <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+                  Tujuan{" "}
+                  {orderData.payment_method === "transfer"
+                    ? "Transfer"
+                    : orderData.payment_method === "ewallet"
+                      ? "E-Wallet"
+                      : "QRIS"}
+                </p>
+
+                {orderData.payment_method === "transfer" && (
+                  <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div>
+                      <p className="text-sm text-gray-500">{store.bank_name}</p>
+                      <p className="text-base font-bold text-gray-800 font-mono">
+                        {store.bank_account}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        A/N {store.bank_owner}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(store.bank_account, "rekening")}
+                      className="bg-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-md font-bold hover:bg-gray-300 transition"
+                    >
+                      {copiedText === "rekening" ? "✓ Tersalin" : "Copy"}
+                    </button>
+                  </div>
+                )}
+
+                {orderData.payment_method === "ewallet" && (
+                  <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        {store.ewallet_name}
+                      </p>
+                      <p className="text-base font-bold text-gray-800 font-mono">
+                        {store.ewallet_number}
+                      </p>
+                    </div>
                     <button
                       onClick={() =>
                         handleCopy(store.ewallet_number, "ewallet")
                       }
-                      className="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded font-bold hover:bg-gray-300"
+                      className="bg-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-md font-bold hover:bg-gray-300 transition"
                     >
-                      {copiedText === "ewallet" ? "✓ Tersalin" : "Copy No. HP"}
+                      {copiedText === "ewallet" ? "✓ Tersalin" : "Copy"}
                     </button>
                   </div>
-                </div>
-              )}
-              {orderData.payment_method === "qris" && store.qris_url && (
-                <div className="text-center mt-2">
-                  <img
-                    src={store.qris_url}
-                    alt="QRIS"
-                    className="w-48 h-48 object-contain mx-auto border rounded bg-white p-2"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-200">
-            <p className="text-blue-800 text-sm font-medium">
-              Silakan bayar langsung di kasir sebesar <br />
-              <strong className="text-xl">
-                Rp {totalTagihan.toLocaleString("id-ID")}
-              </strong>
-            </p>
-          </div>
-        )}
+                )}
 
-        <div className="space-y-3">
-          <button
-            onClick={sendToWhatsApp}
-            className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition flex justify-center items-center gap-2"
-          >
-            <span>💬</span> Konfirmasi ke WhatsApp Admin
-          </button>
-          <Link
-            to="/menu"
-            className="block w-full text-coffee-600 hover:text-coffee-900 font-medium underline py-2"
-          >
-            Pesan Lagi
-          </Link>
+                {orderData.payment_method === "qris" && store.qris_url && (
+                  <div className="text-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <img
+                      src={store.qris_url}
+                      alt="QRIS"
+                      className="w-40 h-40 object-contain mx-auto border rounded-lg bg-white p-2"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-center">
+              <p className="text-sm text-blue-700 mb-1">Pembayaran Tunai</p>
+              <p className="text-xl font-bold text-blue-900">
+                Rp {totalTagihan.toLocaleString("id-ID")}
+              </p>
+              <p className="text-xs text-blue-600 mt-2">
+                Silakan bayar langsung di kasir.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-3">
+            <button
+              onClick={sendToWhatsApp}
+              className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition flex justify-center items-center gap-2 shadow-sm"
+            >
+              <span>💬</span> Konfirmasi ke WhatsApp Admin
+            </button>
+            <Link
+              to="/menu"
+              className="block w-full text-center text-gray-500 hover:text-gray-800 text-sm font-medium py-2"
+            >
+              Pesan Lagi
+            </Link>
+          </div>
         </div>
       </div>
     </div>
