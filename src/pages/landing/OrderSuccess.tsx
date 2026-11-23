@@ -9,7 +9,6 @@ export default function OrderSuccess() {
   const [copiedText, setCopiedText] = useState("");
 
   useEffect(() => {
-    // 1. Ambil detail order
     const apiUrl = import.meta.env.DEV
       ? `http://127.0.0.1:8788/api/orders/${orderNumber}`
       : `/api/orders/${orderNumber}`;
@@ -20,7 +19,6 @@ export default function OrderSuccess() {
       })
       .catch((err) => console.error(err));
 
-    // 2. Ambil pengaturan toko
     const settingsUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
       : "/api/settings";
@@ -35,7 +33,6 @@ export default function OrderSuccess() {
       .catch((err) => console.error(err));
   }, [orderNumber]);
 
-  // Fungsi copy ke clipboard
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedText(type);
@@ -45,22 +42,14 @@ export default function OrderSuccess() {
 
   const sendToWhatsApp = () => {
     if (!waNumber) return alert("Nomor WA Admin belum diatur.");
-
-    let message = `*PESANAN BARU - WARUNG KOPI*\n\n`;
-    message += `No. Pesanan: *${orderNumber}*\n`;
-
+    let message = `*PESANAN BARU - WARUNG KOPI*\n\nNo. Pesanan: *${orderNumber}*\n`;
     if (orderData) {
-      message += `Nama: ${orderData.customer_name}\n`;
-      message += `Tipe: ${orderData.order_type === "dine_in" ? `Dine-in (Meja ${orderData.table_number})` : "Take-away"}\n`;
-      message += `Metode Bayar: ${orderData.payment_method.toUpperCase()}\n\n`;
-
+      message += `Nama: ${orderData.customer_name}\nTipe: ${orderData.order_type === "dine_in" ? `Dine-in (Meja ${orderData.table_number})` : "Take-away"}\nMetode Bayar: ${orderData.payment_method.toUpperCase()}\n\n`;
       message += `*Rincian Pesanan:*\n`;
       orderData.items.forEach((item: any) => {
         message += `- ${item.quantity}x ${item.name}\n`;
       });
-
       message += `\n*Total: Rp ${orderData.total_amount.toLocaleString("id-ID")}*\n`;
-
       if (orderData.payment_method !== "cash" && orderData.unique_code > 0) {
         message += `_(Termasuk kode unik: ${orderData.unique_code})_\n`;
       }
@@ -74,7 +63,6 @@ export default function OrderSuccess() {
     );
   };
 
-  // HANYA TUNGGU orderData. Ini kunci perbaikannya.
   if (!orderData) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -83,7 +71,6 @@ export default function OrderSuccess() {
     );
   }
 
-  // Fallback untuk settings
   const store = settings || {
     bank_name: "Memuat...",
     bank_account: "-",
@@ -92,7 +79,6 @@ export default function OrderSuccess() {
     ewallet_number: "-",
     qris_url: "",
   };
-
   const totalTagihan = orderData.total_amount;
 
   return (
@@ -105,7 +91,6 @@ export default function OrderSuccess() {
         <p className="text-gray-600 mb-6">
           Silakan selesaikan pembayaran Anda.
         </p>
-
         <div className="bg-coffee-50 p-4 rounded-lg mb-6">
           <p className="text-sm text-coffee-700 mb-1">Nomor Pesanan:</p>
           <p className="text-xl font-mono font-bold text-coffee-900">
@@ -113,7 +98,6 @@ export default function OrderSuccess() {
           </p>
         </div>
 
-        {/* DETAIL PEMBAYARAN */}
         {orderData.payment_method !== "cash" ? (
           <div className="bg-yellow-50 rounded-lg border border-yellow-200 mb-6 text-left overflow-hidden">
             <div className="bg-yellow-100 p-3 border-b border-yellow-200">
@@ -135,7 +119,6 @@ export default function OrderSuccess() {
                 *Termasuk kode unik <strong>{orderData.unique_code}</strong>
               </p>
             </div>
-
             <div className="p-4">
               <p className="text-sm font-bold text-gray-800 mb-2">
                 Tujuan{" "}
@@ -146,7 +129,6 @@ export default function OrderSuccess() {
                     : "QRIS"}
                 :
               </p>
-
               {orderData.payment_method === "transfer" && (
                 <div>
                   <p className="text-sm">
@@ -170,7 +152,6 @@ export default function OrderSuccess() {
                   </p>
                 </div>
               )}
-
               {orderData.payment_method === "ewallet" && (
                 <div>
                   <p className="text-sm">
@@ -191,7 +172,6 @@ export default function OrderSuccess() {
                   </div>
                 </div>
               )}
-
               {orderData.payment_method === "qris" && store.qris_url && (
                 <div className="text-center mt-2">
                   <img
@@ -221,7 +201,6 @@ export default function OrderSuccess() {
           >
             <span>💬</span> Konfirmasi ke WhatsApp Admin
           </button>
-
           <Link
             to="/menu"
             className="block w-full text-coffee-600 hover:text-coffee-900 font-medium underline py-2"
