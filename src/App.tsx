@@ -10,6 +10,7 @@ import RequireAuth from "./components/RequireAuth";
 import MenuManager from "./pages/admin/MenuManager";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StoreProfile from "./pages/admin/StoreProfile";
+import OrderHistory from "./pages/pos/OrderHistory";
 
 export default function App() {
   return (
@@ -63,6 +64,14 @@ export default function App() {
           element={
             <RequireAuth>
               <StoreProfile />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/pos/history"
+          element={
+            <RequireAuth>
+              <OrderHistory />
             </RequireAuth>
           }
         />

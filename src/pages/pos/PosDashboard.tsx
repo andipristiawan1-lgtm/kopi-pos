@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import PrintStruk from "./PrintStruk";
+import { Link } from "react-router-dom";
 
 type Order = {
   id: number;
@@ -68,10 +69,21 @@ export default function PosDashboard() {
         <h1 className="text-3xl font-bold text-coffee-900">
           Dashboard Kasir (POS)
         </h1>
+
+        <div className="flex items-center gap-4">
+          <Link
+            to="/pos/history"
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium underline"
+          >
+            Riwayat
+          </Link>
+         
+        </div>
         <div className="flex items-center gap-4">
           <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
             ● Live Antrean
           </div>
+
           <button
             onClick={handleLogout}
             className="text-sm text-red-500 hover:text-red-700 font-medium underline"
