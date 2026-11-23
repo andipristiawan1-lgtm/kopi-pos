@@ -19,7 +19,7 @@ export default function OrderSuccess() {
       })
       .catch((err) => console.error(err));
 
-    // 2. Ambil nomor WA Admin dari database (Pengaturan Toko)
+    // 2. Ambil nomor WA Admin
     const settingsUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
       : "/api/settings";
@@ -34,26 +34,29 @@ export default function OrderSuccess() {
   }, [orderNumber]);
 
   const sendToWhatsApp = () => {
-    if (!orderData || !waNumber) return;
+    if (!waNumber) {
+      alert("Nomor WA Admin belum diatur.");
+      return;
+    }
 
-    // Buat pesan terstruktur
     let message = `*PESANAN BARU - WARUNG KOPI*\n\n`;
-    message += `No. Pesanan: *${orderData.order_number}*\n`;
-    message += `Nama: ${orderData.customer_name}\n`;
-    message += `Tipe: ${orderData.order_type === "dine_in" ? `Dine-in (Meja ${orderData.table_number})` : "Take-away"}\n\n`;
-    message += `*Rincian Pesanan:*\n`;
+    message += `No. Pesanan: *${orderNumber}*\n`;
 
-    orderData.items.forEach((item: any) => {
-      message += `- ${item.quantity}x ${item.name}\n`;
-    });
+    if (orderData) {
+      message += `Nama: ${orderData.customer_name}\n`;
+      message += `Tipe: ${orderData.order_type === "dine_in" ? `Dine-in (Meja ${orderData.table_number})` : "Take-away"}\n\n`;
+      message += `*Rincian Pesanan:*\n`;
+      orderData.items.forEach((item: any) => {
+        message += `- ${item.quantity}x ${item.name}\n`;
+      });
+      message += `\n*Total: Rp ${orderData.total_amount.toLocaleString("id-ID")}*\n`;
+    } else {
+      message += `\n(Mohon cek dashboard kasir untuk rincian lengkap)\n`;
+    }
 
-    message += `\n*Total: Rp ${orderData.total_amount.toLocaleString("id-ID")}*\n`;
     message += `\nMohon konfirmasi pesanan saya. Terima kasih!`;
 
-    // Encode pesan ke format URL
     const encodedMessage = encodeURIComponent(message);
-
-    // Buka WhatsApp
     window.open(`https://wa.me/${waNumber}?text=${encodedMessage}`, "_blank");
   };
 
@@ -76,11 +79,9 @@ export default function OrderSuccess() {
         </div>
 
         <div className="space-y-4">
-          {/* Tombol Kirim ke WA */}
           <button
             onClick={sendToWhatsApp}
-            disabled={!orderData || !waNumber}
-            className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition flex justify-center items-center gap-2 disabled:opacity-50"
+            className="w-full bg-green-500 text-white py-3 rounded-lg font-bold hover:bg-green-600 transition flex justify-center items-center gap-2"
           >
             <span>💬</span> Kirim Rincian ke WA Admin
           </button>
