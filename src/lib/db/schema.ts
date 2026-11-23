@@ -69,3 +69,10 @@ export const orderItems = sqliteTable("order_items", {
   priceAtTime: integer("price_at_time").notNull(), // snapshot harga
   subtotal: integer("subtotal").notNull(),
 });
+
+//=============no WA dan profile
+
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});

@@ -9,6 +9,7 @@ import Login from "./pages/auth/Login";
 import RequireAuth from "./components/RequireAuth";
 import MenuManager from "./pages/admin/MenuManager";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import StoreProfile from "./pages/admin/StoreProfile";
 
 export default function App() {
   return (
@@ -52,6 +53,14 @@ export default function App() {
           element={
             <RequireAuth>
               <AdminDashboard />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/profile"
+          element={
+            <RequireAuth>
+              <StoreProfile />
             </RequireAuth>
           }
         />
