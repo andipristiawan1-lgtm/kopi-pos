@@ -45,13 +45,30 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     const statements = [];
 
     for (const [key, value] of Object.entries(body)) {
+      let finalValue = String(value);
+
+      // JIKA YANG DIUPDATE ADALAH NOMOR WA, LAKUKAN FORMATTING
+      if (key === "wa_admin") {
+        // 1. Hapus semua karakter selain angka (spasi, strip, dll)
+        finalValue = finalValue.replace(/\D/g, "");
+
+        // 2. Jika diawali dengan '0', ubah menjadi '62'
+        if (finalValue.startsWith("0")) {
+          finalValue = "62" + finalValue.slice(1);
+        }
+        // 3. Jika belum diawali '62' (misal user ngetik langsung 8xxxx), tambahkan '62'
+        else if (!finalValue.startsWith("62")) {
+          finalValue = "62" + finalValue;
+        }
+      }
+
       statements.push(
         context.env.DB.prepare(
           `
           INSERT INTO settings (key, value) VALUES (?, ?)
           ON CONFLICT(key) DO UPDATE SET value = excluded.value
         `,
-        ).bind(key, String(value)),
+        ).bind(key, finalValue),
       );
     }
 
