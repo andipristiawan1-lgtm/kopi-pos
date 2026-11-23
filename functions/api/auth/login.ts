@@ -1,4 +1,39 @@
-import bcrypt from "bcryptjs";
+// Fungsi untuk memverifikasi password dengan Web Crypto (PBKDF2)
+async function verifyPassword(
+  password: string,
+  storedHash: string,
+): Promise<boolean> {
+  const [salt, originalHash] = storedHash.split(":");
+  if (!salt || !originalHash) return false;
+
+  const encoder = new TextEncoder();
+  const passwordBuffer = encoder.encode(password);
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    passwordBuffer,
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"],
+  );
+
+  const derivedBits = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(salt),
+      iterations: 100000,
+      hash: "SHA-512",
+    },
+    keyMaterial,
+    512,
+  );
+
+  const derivedHex = Array.from(new Uint8Array(derivedBits))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  return derivedHex === originalHash;
+}
 
 export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
   context,
@@ -6,7 +41,6 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
   try {
     const { email, password } = (await context.request.json()) as any;
 
-    // 1. Cari user di database
     const user = await context.env.DB.prepare(
       "SELECT * FROM users WHERE email = ? AND is_active = 1",
     )
@@ -20,8 +54,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       );
     }
 
-    // 2. Cek password
-    const isValid = await bcrypt.compare(password, user.password_hash);
+    const isValid = await verifyPassword(password, user.password_hash);
     if (!isValid) {
       return Response.json(
         { error: "Email atau password salah" },
@@ -29,18 +62,15 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       );
     }
 
-    // 3. Buat session token (UUID acak)
     const sessionId = crypto.randomUUID();
-    const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7; // 7 hari
+    const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7;
 
-    // 4. Simpan session ke database
     await context.env.DB.prepare(
       "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)",
     )
       .bind(sessionId, user.id, expiresAt)
       .run();
 
-    // 5. Set Cookie HttpOnly
     const cookie = `session_token=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${60 * 60 * 24 * 7}`;
 
     return Response.json(
