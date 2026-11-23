@@ -20,7 +20,7 @@ export default function OrderSuccess() {
       })
       .catch((err) => console.error(err));
 
-    // 2. Ambil pengaturan toko (WA, Rekening, dll)
+    // 2. Ambil pengaturan toko
     const settingsUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
       : "/api/settings";
@@ -35,11 +35,11 @@ export default function OrderSuccess() {
       .catch((err) => console.error(err));
   }, [orderNumber]);
 
-  // Fungsi untuk copy ke clipboard
+  // Fungsi copy ke clipboard
   const handleCopy = (text: string, type: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopiedText(type);
-      setTimeout(() => setCopiedText(""), 2000); // Hilangkan teks "Tersalin!" setelah 2 detik
+      setTimeout(() => setCopiedText(""), 2000);
     });
   };
 
@@ -74,14 +74,24 @@ export default function OrderSuccess() {
     );
   };
 
-  // Tampilkan loading jika data belum siap
-  if (!orderData || !settings) {
+  // PERBAIKAN: Hanya tunggu orderData. Jika settings kosong, pakai fallback.
+  if (!orderData) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        Memuat data...
+        Memuat rincian pesanan...
       </div>
     );
   }
+
+  // Fallback settings jika belum termuat
+  const store = settings || {
+    bank_name: "Memuat...",
+    bank_account: "-",
+    bank_owner: "-",
+    ewallet_name: "Memuat...",
+    ewallet_number: "-",
+    qris_url: "",
+  };
 
   const totalTagihan = orderData.total_amount;
 
@@ -140,16 +150,14 @@ export default function OrderSuccess() {
               {orderData.payment_method === "transfer" && (
                 <div>
                   <p className="text-sm">
-                    Bank: <strong>{settings.bank_name}</strong>
+                    Bank: <strong>{store.bank_name}</strong>
                   </p>
                   <div className="flex justify-between items-center mt-1">
                     <p className="text-lg font-mono font-bold text-gray-900">
-                      {settings.bank_account}
+                      {store.bank_account}
                     </p>
                     <button
-                      onClick={() =>
-                        handleCopy(settings.bank_account, "rekening")
-                      }
+                      onClick={() => handleCopy(store.bank_account, "rekening")}
                       className="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded font-bold hover:bg-gray-300"
                     >
                       {copiedText === "rekening"
@@ -158,7 +166,7 @@ export default function OrderSuccess() {
                     </button>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    A/N: {settings.bank_owner}
+                    A/N: {store.bank_owner}
                   </p>
                 </div>
               )}
@@ -166,15 +174,15 @@ export default function OrderSuccess() {
               {orderData.payment_method === "ewallet" && (
                 <div>
                   <p className="text-sm">
-                    E-Wallet: <strong>{settings.ewallet_name}</strong>
+                    E-Wallet: <strong>{store.ewallet_name}</strong>
                   </p>
                   <div className="flex justify-between items-center mt-1">
                     <p className="text-lg font-mono font-bold text-gray-900">
-                      {settings.ewallet_number}
+                      {store.ewallet_number}
                     </p>
                     <button
                       onClick={() =>
-                        handleCopy(settings.ewallet_number, "ewallet")
+                        handleCopy(store.ewallet_number, "ewallet")
                       }
                       className="text-xs bg-gray-200 text-gray-800 px-2 py-1 rounded font-bold hover:bg-gray-300"
                     >
@@ -184,10 +192,10 @@ export default function OrderSuccess() {
                 </div>
               )}
 
-              {orderData.payment_method === "qris" && settings.qris_url && (
+              {orderData.payment_method === "qris" && store.qris_url && (
                 <div className="text-center mt-2">
                   <img
-                    src={settings.qris_url}
+                    src={store.qris_url}
                     alt="QRIS"
                     className="w-48 h-48 object-contain mx-auto border rounded bg-white p-2"
                   />
