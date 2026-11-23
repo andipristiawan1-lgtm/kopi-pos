@@ -16,6 +16,14 @@ export default function PosDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const handleLogout = async () => {
+    const apiUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/auth/logout"
+      : "/api/auth/logout";
+    await fetch(apiUrl, { method: "POST" });
+    window.location.href = "/login";
+  };
+
   const fetchOrders = () => {
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/orders/list"
@@ -54,15 +62,25 @@ export default function PosDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-coffee-900">
           Dashboard Kasir (POS)
         </h1>
-        <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-          ● Live Antrean
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+            ● Live Antrean
+          </div>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-red-500 hover:text-red-700 font-medium underline"
+          >
+            Logout
+          </button>
         </div>
       </div>
 
+      {/* KONTEN */}
       {orders.length === 0 ? (
         <div className="text-center p-12 bg-white rounded-xl shadow-sm text-gray-500">
           Belum ada pesanan masuk hari ini.
