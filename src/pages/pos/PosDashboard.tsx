@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import PrintStruk from "./PrintStruk";
 
 type Order = {
   id: number;
@@ -15,6 +16,7 @@ type Order = {
 export default function PosDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const handleLogout = async () => {
     const apiUrl = import.meta.env.DEV
@@ -39,7 +41,6 @@ export default function PosDashboard() {
 
   useEffect(() => {
     fetchOrders();
-    // Auto-refresh setiap 10 detik
     const interval = setInterval(fetchOrders, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -55,7 +56,7 @@ export default function PosDashboard() {
       body: JSON.stringify({ status }),
     });
 
-    fetchOrders(); // Refresh data setelah update
+    fetchOrders();
   };
 
   if (loading) return <div className="p-10 text-center">Memuat antrean...</div>;
@@ -141,25 +142,42 @@ export default function PosDashboard() {
                   Rp {order.total_amount.toLocaleString("id-ID")}
                 </span>
 
-                {order.status === "pending" ? (
+                <div className="flex gap-2">
                   <button
-                    onClick={() => updateStatus(order.id, "preparing")}
-                    className="bg-red-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-red-600"
+                    onClick={() => setSelectedOrder(order)}
+                    className="bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm font-bold hover:bg-gray-200"
                   >
-                    Proses
+                    Struk
                   </button>
-                ) : (
-                  <button
-                    onClick={() => updateStatus(order.id, "completed")}
-                    className="bg-green-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-green-600"
-                  >
-                    Selesai
-                  </button>
-                )}
+
+                  {order.status === "pending" ? (
+                    <button
+                      onClick={() => updateStatus(order.id, "preparing")}
+                      className="bg-red-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-red-600"
+                    >
+                      Proses
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => updateStatus(order.id, "completed")}
+                      className="bg-green-500 text-white px-4 py-2 rounded text-sm font-bold hover:bg-green-600"
+                    >
+                      Selesai
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Modal Struk */}
+      {selectedOrder && (
+        <PrintStruk
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
       )}
     </div>
   );
