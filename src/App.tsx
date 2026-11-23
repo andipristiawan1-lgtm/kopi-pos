@@ -20,10 +20,8 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<Menu />} />
 
-          {/* RUTE ORDER (HARUS BERADA DI ATAS SUCCESS) */}
+          {/* PASTIKAN DUA RUTE DI BAWAH INI URUTANNYA SEPERTI INI */}
           <Route path="/order" element={<Order />} />
-
-          {/* RUTE SUCCESS (MEMILIKI PARAMETER) */}
           <Route
             path="/order/success/:orderNumber"
             element={<OrderSuccess />}
