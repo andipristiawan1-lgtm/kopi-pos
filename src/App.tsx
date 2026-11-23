@@ -8,6 +8,7 @@ import PosDashboard from "./pages/pos/PosDashboard";
 import Login from "./pages/auth/Login";
 import RequireAuth from "./components/RequireAuth";
 import MenuManager from "./pages/admin/MenuManager";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 export default function App() {
   return (
@@ -43,6 +44,14 @@ export default function App() {
           element={
             <RequireAuth>
               <MenuManager />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth>
+              <AdminDashboard />
             </RequireAuth>
           }
         />
