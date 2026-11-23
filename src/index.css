@@ -6,3 +6,21 @@ body {
   @apply bg-coffee-50 text-coffee-900;
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #struk-area,
+  #struk-area * {
+    visibility: visible;
+  }
+
+  #struk-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
