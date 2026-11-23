@@ -2,8 +2,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (
   context,
 ) => {
   try {
-    // Ambil semua pesanan hari ini yang statusnya pending atau preparing
-    const today = new Date().toISOString().slice(0, 10);
+    // Ambil semua pesanan aktif (pending & preparing)
     const { results } = await context.env.DB.prepare(
       `
         SELECT o.*, 
@@ -13,17 +12,14 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (
           )) FROM order_items oi WHERE oi.order_id = o.id) as items
         FROM orders o 
         WHERE o.status IN ('pending', 'preparing') 
-          AND date(o.created_at, 'unixepoch') = ?
         ORDER BY o.created_at ASC
       `,
-    )
-      .bind(today)
-      .all();
+    ).all();
 
     // Format JSON string dari SQLite menjadi object
     const formattedOrders = results.map((order: any) => ({
       ...order,
-      items: JSON.parse(order.items),
+      items: JSON.parse(order.items || "[]"),
     }));
 
     return Response.json({ data: formattedOrders });
