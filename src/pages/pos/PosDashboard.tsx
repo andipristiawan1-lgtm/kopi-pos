@@ -64,29 +64,28 @@ export default function PosDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-8">
+      {/* HEADER YANG SUDAH DIRAPIKAN */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold text-coffee-900">
           Dashboard Kasir (POS)
         </h1>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="text-xs font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-full border border-green-200 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            Live Antrean
+          </div>
+
           <Link
             to="/pos/history"
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium underline"
+            className="text-sm bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full font-bold hover:bg-blue-100 transition border border-blue-200"
           >
             Riwayat
           </Link>
-         
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
-            ● Live Antrean
-          </div>
 
           <button
             onClick={handleLogout}
-            className="text-sm text-red-500 hover:text-red-700 font-medium underline"
+            className="text-sm bg-red-50 text-red-600 px-4 py-1.5 rounded-full font-bold hover:bg-red-100 transition border border-red-200"
           >
             Logout
           </button>
