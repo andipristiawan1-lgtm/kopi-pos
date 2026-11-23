@@ -19,21 +19,33 @@ export default function Order() {
   );
   const [tableNumber, setTableNumber] = useState("");
   const [customerName, setCustomerName] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash"); // State baru
+  const [settings, setSettings] = useState<any>(null); // State baru untuk info rekening
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Ambil data menu saat halaman dimuat
+  // Ambil data menu dan pengaturan
   useEffect(() => {
-    const apiUrl = import.meta.env.DEV
+    const apiUrlMenu = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/menu"
       : "/api/menu";
-    fetch(apiUrl)
+    const apiUrlSettings = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/settings"
+      : "/api/settings";
+
+    fetch(apiUrlMenu)
       .then((res) => res.json())
       .then((data) => setMenu(data.data))
       .catch(() => setError("Gagal memuat menu."));
+
+    fetch(apiUrlSettings)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.data) setSettings(data.data);
+      })
+      .catch((err) => console.error("Gagal memuat info pembayaran", err));
   }, []);
 
-  // Fungsi keranjang
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.id === item.id);
@@ -76,6 +88,7 @@ export default function Order() {
           orderType,
           tableNumber,
           customerName,
+          paymentMethod, // Kirim metode pembayaran ke backend
           items: cart.map((item) => ({
             menuItemId: item.id,
             quantity: item.quantity,
@@ -86,7 +99,6 @@ export default function Order() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Gagal memesan");
 
-      // Redirect ke halaman sukses (kita akan buat nanti)
       navigate(`/order/success/${result.orderNumber}`);
     } catch (err: any) {
       setError(err.message);
@@ -168,7 +180,7 @@ export default function Order() {
             <select
               value={orderType}
               onChange={(e) => setOrderType(e.target.value as any)}
-              className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-coffee-500 focus:border-coffee-500"
+              className="w-full border border-gray-300 rounded-lg p-2 text-sm"
             >
               <option value="dine_in">Makan di Tempat (Dine-in)</option>
               <option value="take_away">Bungkus (Take-away)</option>
@@ -185,7 +197,7 @@ export default function Order() {
                 placeholder="Contoh: 05"
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-coffee-500 focus:border-coffee-500"
+                className="w-full border border-gray-300 rounded-lg p-2 text-sm"
               />
             </div>
           )}
@@ -199,9 +211,82 @@ export default function Order() {
               placeholder="Opsional"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-coffee-500 focus:border-coffee-500"
+              className="w-full border border-gray-300 rounded-lg p-2 text-sm"
             />
           </div>
+
+          {/* METODE PEMBAYARAN */}
+          <div>
+            <label className="block text-sm font-medium text-coffee-900 mb-2">
+              Metode Pembayaran
+            </label>
+            <div className="space-y-2 text-sm">
+              {[
+                { id: "cash", label: "Tunai (Bayar di Kasir)" },
+                { id: "transfer", label: "Transfer Bank" },
+                { id: "ewallet", label: "E-Wallet (GoPay/OVO/Dana)" },
+                { id: "qris", label: "QRIS (Scan)" },
+              ].map((method) => (
+                <label
+                  key={method.id}
+                  className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50"
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    value={method.id}
+                    checked={paymentMethod === method.id}
+                    onChange={() => setPaymentMethod(method.id)}
+                  />
+                  <span>{method.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* INFORMASI PEMBAYARAN (Hanya tampil jika bukan Cash) */}
+          {paymentMethod !== "cash" && settings && (
+            <div className="bg-coffee-50 p-4 rounded-lg border border-coffee-200 mt-2">
+              <p className="font-bold text-coffee-900 mb-2 text-sm">
+                Silakan Bayar Ke:
+              </p>
+
+              {paymentMethod === "transfer" && (
+                <div className="text-sm">
+                  <p>
+                    Bank: <strong>{settings.bank_name || "-"}</strong>
+                  </p>
+                  <p>
+                    No. Rek: <strong>{settings.bank_account || "-"}</strong>
+                  </p>
+                  <p>A/N: {settings.bank_owner || "-"}</p>
+                </div>
+              )}
+              {paymentMethod === "ewallet" && (
+                <div className="text-sm">
+                  <p>
+                    E-Wallet: <strong>{settings.ewallet_name || "-"}</strong>
+                  </p>
+                  <p>
+                    No. HP: <strong>{settings.ewallet_number || "-"}</strong>
+                  </p>
+                </div>
+              )}
+              {paymentMethod === "qris" && settings.qris_url && (
+                <div className="text-center mt-2">
+                  <img
+                    src={settings.qris_url}
+                    alt="QRIS"
+                    className="w-40 h-40 object-contain mx-auto border rounded"
+                  />
+                </div>
+              )}
+              <p className="text-red-600 font-bold mt-3 text-xs">
+                *Sistem akan menambahkan 3 angka unik pada total akhir untuk
+                mempermudah verifikasi.
+              </p>
+            </div>
+          )}
 
           {error && <p className="text-red-500 text-sm">{error}</p>}
 

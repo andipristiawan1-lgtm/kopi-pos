@@ -2,34 +2,37 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function StoreProfile() {
-  const [waAdmin, setWaAdmin] = useState("");
+  const [formData, setFormData] = useState({
+    wa_admin: "",
+    bank_name: "",
+    bank_account: "",
+    bank_owner: "",
+    ewallet_name: "",
+    ewallet_number: "",
+    qris_url: "",
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    // Ambil data pengaturan saat ini
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
       : "/api/settings";
     fetch(apiUrl)
       .then((res) => res.json())
       .then((data) => {
-        if (data.data && data.data.wa_admin) {
-          setWaAdmin(data.data.wa_admin);
-        }
+        if (data.data) setFormData((prev) => ({ ...prev, ...data.data }));
       });
   }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     setMessage("");
-
-    // Format nomor: hapus spasi, pastikan diawali 62
-    let formattedNumber = waAdmin.replace(/\D/g, "");
-    if (formattedNumber.startsWith("0")) {
-      formattedNumber = "62" + formattedNumber.slice(1);
-    }
 
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
@@ -38,71 +41,145 @@ export default function StoreProfile() {
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wa_admin: formattedNumber }),
+        body: JSON.stringify(formData),
       });
-
-      if (res.ok) {
-        setMessage("Pengaturan berhasil disimpan!");
-        setWaAdmin(formattedNumber); // Update tampilan dengan format baru
-      } else {
-        throw new Error("Gagal menyimpan");
-      }
+      if (res.ok) setMessage("Pengaturan berhasil disimpan!");
+      else throw new Error();
     } catch (err) {
-      setMessage("Terjadi kesalahan saat menyimpan.");
+      setMessage("Gagal menyimpan pengaturan.");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Link to="/admin" className="text-coffee-600 hover:underline text-sm">
-          ← Kembali ke Dashboard
-        </Link>
-      </div>
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <Link
+        to="/admin"
+        className="text-coffee-600 hover:underline text-sm mb-6 block"
+      >
+        ← Kembali ke Dashboard
+      </Link>
 
       <div className="bg-white p-8 rounded-xl shadow-sm border border-coffee-100">
-        <h1 className="text-2xl font-bold text-coffee-900 mb-2">Profil Toko</h1>
-        <p className="text-gray-500 mb-6">
-          Atur informasi kontak yang akan digunakan pelanggan.
-        </p>
+        <h1 className="text-2xl font-bold text-coffee-900 mb-6">
+          Profil & Pembayaran
+        </h1>
+
+        {message && (
+          <div
+            className={`p-3 rounded mb-4 ${message.includes("berhasil") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
+          >
+            {message}
+          </div>
+        )}
 
         <form onSubmit={handleSave} className="space-y-6">
-          <div>
-            <label className="block text-sm font-bold text-coffee-900 mb-2">
-              Nomor WhatsApp Admin
+          {/* KONTAK */}
+          <div className="border-b pb-4">
+            <h2 className="font-bold text-lg mb-4 text-coffee-800">Kontak</h2>
+            <label className="block text-sm font-medium mb-1">
+              Nomor WhatsApp Admin (Gunakan 62...)
             </label>
-            <div className="flex">
-              <span className="inline-flex items-center px-3 text-gray-500 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg">
-                +62
-              </span>
-              <input
-                type="text"
-                value={waAdmin.replace(/^62/, "")}
-                onChange={(e) => setWaAdmin(e.target.value)}
-                placeholder="81234567890"
-                className="flex-1 border border-gray-300 rounded-r-lg p-2 focus:ring-coffee-500 focus:border-coffee-500"
-                required
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Nomor ini akan muncul di halaman sukses pesanan pelanggan.
-            </p>
+            <input
+              type="text"
+              name="wa_admin"
+              value={formData.wa_admin}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+            />
           </div>
 
-          {message && (
-            <div
-              className={`p-3 rounded-lg text-sm ${message.includes("berhasil") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
-            >
-              {message}
+          {/* TRANSFER BANK */}
+          <div className="border-b pb-4">
+            <h2 className="font-bold text-lg mb-4 text-coffee-800">
+              Transfer Bank
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm mb-1">
+                  Nama Bank (Cth: BCA)
+                </label>
+                <input
+                  type="text"
+                  name="bank_name"
+                  value={formData.bank_name}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Nomor Rekening</label>
+                <input
+                  type="text"
+                  name="bank_account"
+                  value={formData.bank_account}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
             </div>
-          )}
+            <div className="mt-2">
+              <label className="block text-sm mb-1">Atas Nama</label>
+              <input
+                type="text"
+                name="bank_owner"
+                value={formData.bank_owner}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+              />
+            </div>
+          </div>
+
+          {/* E-WALLET */}
+          <div className="border-b pb-4">
+            <h2 className="font-bold text-lg mb-4 text-coffee-800">E-Wallet</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm mb-1">
+                  Nama E-Wallet (Cth: GoPay)
+                </label>
+                <input
+                  type="text"
+                  name="ewallet_name"
+                  value={formData.ewallet_name}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Nomor HP E-Wallet</label>
+                <input
+                  type="text"
+                  name="ewallet_number"
+                  value={formData.ewallet_number}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* QRIS */}
+          <div>
+            <h2 className="font-bold text-lg mb-4 text-coffee-800">QRIS</h2>
+            <label className="block text-sm mb-1">
+              URL Gambar QRIS (Upload ke Imgur/Drive, paste link-nya)
+            </label>
+            <input
+              type="text"
+              name="qris_url"
+              value={formData.qris_url}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+              placeholder="https://..."
+            />
+          </div>
 
           <button
             type="submit"
             disabled={isSaving}
-            className="w-full bg-coffee-500 text-white py-3 rounded-lg font-bold hover:bg-coffee-700 disabled:opacity-50"
+            className="w-full bg-coffee-500 text-white py-3 rounded font-bold hover:bg-coffee-700"
           >
             {isSaving ? "Menyimpan..." : "Simpan Pengaturan"}
           </button>

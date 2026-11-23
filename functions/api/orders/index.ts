@@ -24,7 +24,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     const now = Math.floor(Date.now() / 1000);
 
     // 3. Validasi Harga dari Database
-    let totalAmount = 0;
+    let subtotal = 0;
     const menuIds = body.items.map((i: any) => i.menuItemId);
     const placeholders = menuIds.map(() => "?").join(",");
 
@@ -40,14 +40,25 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       const dbMenu: any = menuMap.get(item.menuItemId);
       if (!dbMenu)
         throw new Error(`Menu ID ${item.menuItemId} tidak ditemukan`);
-      totalAmount += dbMenu.price * item.quantity;
+      subtotal += dbMenu.price * item.quantity;
     }
 
-    // 4. Insert Order ke Database
+    // 4. Buat Kode Unik untuk Non-Cash (1 - 999)
+    let uniqueCode = 0;
+    const paymentMethod = body.paymentMethod || "cash";
+
+    if (paymentMethod !== "cash") {
+      uniqueCode = Math.floor(Math.random() * 999) + 1;
+    }
+
+    // Total akhir = subtotal menu + kode unik
+    const totalAmount = subtotal + uniqueCode;
+
+    // 5. Insert Order ke Database (Tambahkan payment_method & unique_code)
     const insertOrder = await context.env.DB.prepare(
       `
-      INSERT INTO orders (order_number, order_type, table_number, customer_name, status, total_amount, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)
+      INSERT INTO orders (order_number, order_type, table_number, customer_name, status, total_amount, payment_method, unique_code, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
     `,
     )
       .bind(
@@ -56,6 +67,8 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
         body.tableNumber || null,
         body.customerName || "Pelanggan",
         totalAmount,
+        paymentMethod,
+        uniqueCode,
         now,
         now,
       )
@@ -65,7 +78,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       throw new Error("Gagal insert order ke database");
     }
 
-    // 5. Ambil ID Order yang Baru Dibuat
+    // 6. Ambil ID Order yang Baru Dibuat
     const getOrder = await context.env.DB.prepare(
       "SELECT id FROM orders WHERE order_number = ?",
     )
@@ -79,7 +92,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     const orderId = getOrder.id;
     const itemStatements = [];
 
-    // 6. Siapkan Item untuk Batch Insert
+    // 7. Siapkan Item untuk Batch Insert
     for (const item of body.items) {
       const dbMenu: any = menuMap.get(item.menuItemId);
       itemStatements.push(
@@ -99,16 +112,19 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       );
     }
 
-    // 7. Eksekusi Item (Batch)
+    // 8. Eksekusi Item (Batch)
     if (itemStatements.length > 0) {
       await context.env.DB.batch(itemStatements);
     }
 
-    // 8. Kembalikan Response Sukses
+    // 9. Kembalikan Response Sukses
     return Response.json({
       success: true,
       orderNumber,
+      subtotal,
+      uniqueCode,
       totalAmount,
+      paymentMethod,
       message: "Pesanan berhasil dibuat",
     });
   } catch (error) {

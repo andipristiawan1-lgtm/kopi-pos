@@ -44,12 +44,20 @@ export default function OrderSuccess() {
 
     if (orderData) {
       message += `Nama: ${orderData.customer_name}\n`;
-      message += `Tipe: ${orderData.order_type === "dine_in" ? `Dine-in (Meja ${orderData.table_number})` : "Take-away"}\n\n`;
+      message += `Tipe: ${orderData.order_type === "dine_in" ? `Dine-in (Meja ${orderData.table_number})` : "Take-away"}\n`;
+      message += `Metode Bayar: ${orderData.payment_method.toUpperCase()}\n\n`;
+
       message += `*Rincian Pesanan:*\n`;
       orderData.items.forEach((item: any) => {
         message += `- ${item.quantity}x ${item.name}\n`;
       });
+
       message += `\n*Total: Rp ${orderData.total_amount.toLocaleString("id-ID")}*\n`;
+
+      // Tambahkan info kode unik di WA jika non-cash
+      if (orderData.payment_method !== "cash" && orderData.unique_code > 0) {
+        message += `_(Termasuk kode unik: ${orderData.unique_code})_\n`;
+      }
     } else {
       message += `\n(Mohon cek dashboard kasir untuk rincian lengkap)\n`;
     }
@@ -71,12 +79,30 @@ export default function OrderSuccess() {
           Pesanan Anda sedang diproses oleh kasir kami.
         </p>
 
-        <div className="bg-coffee-50 p-4 rounded-lg mb-8">
+        <div className="bg-coffee-50 p-4 rounded-lg mb-6">
           <p className="text-sm text-coffee-700 mb-1">Nomor Pesanan Anda:</p>
           <p className="text-xl font-mono font-bold text-coffee-900">
             {orderNumber}
           </p>
         </div>
+
+        {/* Rincian Pembayaran untuk Non-Cash */}
+        {orderData && orderData.payment_method !== "cash" && (
+          <div className="bg-yellow-50 p-4 rounded-lg mb-6 text-left border border-yellow-200">
+            <p className="text-sm text-yellow-800 font-medium mb-1">
+              Total yang harus dibayar:
+            </p>
+            <p className="text-2xl font-bold text-yellow-900 mb-2">
+              Rp {orderData.total_amount.toLocaleString("id-ID")}
+            </p>
+            <p className="text-xs text-yellow-700 leading-relaxed">
+              *Total di atas sudah termasuk{" "}
+              <strong>Kode Unik ({orderData.unique_code})</strong>. Silakan
+              transfer sesuai nominal yang tertera agar pesanan Anda otomatis
+              terverifikasi oleh admin.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-4">
           <button
