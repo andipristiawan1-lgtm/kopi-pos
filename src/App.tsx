@@ -19,7 +19,11 @@ export default function App() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<Menu />} />
+
+          {/* RUTE ORDER (HARUS BERADA DI ATAS SUCCESS) */}
           <Route path="/order" element={<Order />} />
+
+          {/* RUTE SUCCESS (MEMILIKI PARAMETER) */}
           <Route
             path="/order/success/:orderNumber"
             element={<OrderSuccess />}
