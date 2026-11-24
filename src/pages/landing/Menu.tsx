@@ -157,7 +157,8 @@ export default function Menu() {
         </p>
         <Link
           to="/order"
-          className="inline-block bg-coffee-600 text-white px-8 py-3 rounded-full font-bold hover:bg-coffee-700 transition shadow-md"
+          className="inline-block text-white px-8 py-3 rounded-full font-bold hover:opacity-90 transition shadow-lg"
+          style={{ backgroundColor: "#5c3a21" }} // <-- Paksa warna cokelat tua (coffee-700)
         >
           Pesan Online Sekarang
         </Link>
