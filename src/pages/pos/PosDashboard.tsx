@@ -120,9 +120,13 @@ export default function PosDashboard() {
                     {order.order_number}
                   </span>
                   <p className="text-xs text-gray-500">
-                    {new Date(order.created_at * 1000).toLocaleTimeString(
-                      "id-ID",
-                    )}
+                    {new Date(order.created_at * 1000).toLocaleString("id-ID", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
                 <span
