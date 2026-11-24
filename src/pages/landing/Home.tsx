@@ -1,11 +1,34 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+type MenuItem = {
+  id: number;
+  name: string;
+  price: number;
+  imageUrl: string | null;
+  category: string;
+};
+
 export default function Home() {
+  const [featuredMenus, setFeaturedMenus] = useState<MenuItem[]>([]);
+
+  useEffect(() => {
+    // Ambil 6 menu pertama untuk ditampilkan di carousel
+    const apiUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/menu"
+      : "/api/menu";
+    fetch(apiUrl)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.data) setFeaturedMenus(data.data.slice(0, 6)); // Ambil maksimal 6 menu
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
   return (
     <div className="flex flex-col">
       {/* HERO SECTION */}
       <section className="relative bg-coffee-900 text-white overflow-hidden">
-        {/* Background Overlay (Bisa diganti gambar asli nanti) */}
         <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center"></div>
 
         <div className="relative max-w-6xl mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center z-10">
@@ -33,6 +56,77 @@ export default function Home() {
               className="bg-coffee-600 text-white px-8 py-3.5 rounded-full font-bold hover:bg-coffee-500 transition shadow-lg border border-coffee-500 text-center"
             >
               Booking Meja (DP)
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* CAROUSEL MENU (Menggantikan CTA biasa) */}
+      <section className="py-20 bg-white overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 mb-8 flex justify-between items-end">
+          <div>
+            <h2 className="text-3xl font-bold text-coffee-900 mb-2">
+              Menu Andalan Kami
+            </h2>
+            <p className="text-gray-500">
+              Beberapa menu yang paling sering dipesan pelanggan.
+            </p>
+          </div>
+          <Link
+            to="/menu"
+            className="hidden md:block text-coffee-600 font-bold hover:underline"
+          >
+            Lihat Semua Menu &rarr;
+          </Link>
+        </div>
+
+        {/* Area Scroll (Carousel) */}
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory scrollbar-hide">
+            {featuredMenus.length === 0 ? (
+              <div className="w-full text-center py-10 text-gray-400">
+                Memuat menu...
+              </div>
+            ) : (
+              featuredMenus.map((item) => (
+                <Link
+                  key={item.id}
+                  to="/order"
+                  className="snap-center shrink-0 w-64 md:w-72 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden group hover:shadow-lg transition"
+                >
+                  <div className="h-48 overflow-hidden relative">
+                    <img
+                      src={
+                        item.imageUrl ||
+                        "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=500&auto=format&fit=crop"
+                      }
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-xs font-bold text-coffee-800 capitalize">
+                      {item.category.replace("-", " ")}
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-bold text-coffee-900 text-lg mb-1">
+                      {item.name}
+                    </h3>
+                    <p className="text-coffee-600 font-bold">
+                      Rp {item.price.toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+
+          {/* Tombol Lihat Menu (Mobile) */}
+          <div className="text-center mt-4 md:hidden">
+            <Link
+              to="/menu"
+              className="inline-block bg-coffee-100 text-coffee-700 px-6 py-2 rounded-full font-bold text-sm hover:bg-coffee-200 transition"
+            >
+              Lihat Semua Menu
             </Link>
           </div>
         </div>
@@ -98,33 +192,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CALL TO ACTION */}
-      <section className="py-20 px-4 bg-white">
-        <div className="max-w-5xl mx-auto bg-gradient-to-br from-coffee-800 to-coffee-900 rounded-3xl p-8 md:p-14 text-center text-white relative overflow-hidden shadow-2xl">
-          {/* Aksen dekoratif */}
-          <div className="absolute top-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-48 h-48 bg-white opacity-5 rounded-full translate-x-1/3 translate-y-1/3"></div>
-
+      {/* CTA PENUTUP (Banner Sederhana) */}
+      <section className="py-16 px-4 bg-white">
+        <div className="max-w-5xl mx-auto bg-gradient-to-br from-coffee-800 to-coffee-900 rounded-3xl p-8 md:p-12 text-center text-white relative overflow-hidden shadow-xl">
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">
               Siap Menikmati Kopi Anda?
             </h2>
-            <p className="text-coffee-200 text-lg mb-8 max-w-2xl mx-auto">
+            <p className="text-coffee-200 mb-8 max-w-xl mx-auto">
               Jangan biarkan rasa penasaran menunda momen ngopi Anda. Pesan
               sekarang, atau booking meja untuk pengalaman yang lebih privat.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
-                to="/menu"
-                className="bg-white text-coffee-900 px-8 py-3.5 rounded-full font-bold hover:bg-gray-100 transition shadow-lg w-full sm:w-auto"
-              >
-                Lihat Menu
-              </Link>
-              <Link
                 to="/order"
-                className="bg-transparent border-2 border-white text-white px-8 py-3.5 rounded-full font-bold hover:bg-white/10 transition w-full sm:w-auto"
+                className="bg-white text-coffee-900 px-8 py-3.5 rounded-full font-bold hover:bg-gray-100 transition shadow-lg"
               >
                 Pesan Online
+              </Link>
+              <Link
+                to="/booking"
+                className="bg-transparent border-2 border-white text-white px-8 py-3.5 rounded-full font-bold hover:bg-white/10 transition"
+              >
+                Booking Meja
               </Link>
             </div>
           </div>
