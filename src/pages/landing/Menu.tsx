@@ -85,7 +85,7 @@ export default function Menu() {
             onClick={() => setActiveCategory(cat)}
             className={`px-5 py-2 rounded-full text-sm font-bold capitalize transition-all duration-200 ${
               activeCategory === cat
-                ? "bg-coffee-700 text-white shadow-lg scale-105 ring-2 ring-coffee-300" // <-- Warna lebih gelap & tebal
+                ? "bg-coffee-700 text-white shadow-lg scale-105 ring-2 ring-coffee-300"
                 : "bg-white text-gray-600 border border-gray-200 hover:border-coffee-500 hover:text-coffee-600"
             }`}
           >
@@ -101,19 +101,16 @@ export default function Menu() {
             key={item.id}
             className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group"
           >
-            {/* Gambar Menu (Placeholder jika tidak ada gambar) */}
+            {/* Gambar Menu */}
             <div className="h-48 bg-coffee-100 relative overflow-hidden">
-              {item.imageUrl ? (
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-5xl opacity-50 group-hover:scale-110 transition-transform duration-500">
-                  ☕
-                </div>
-              )}
+              <img
+                src={
+                  item.imageUrl ||
+                  "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=500&auto=format&fit=crop"
+                }
+                alt={item.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
               <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-coffee-800 shadow-sm capitalize">
                 {item.category.replace("-", " ")}
               </div>
