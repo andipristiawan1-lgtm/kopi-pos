@@ -138,9 +138,11 @@ export default function PosDashboard() {
 
               <div className="bg-coffee-50 p-3 rounded-lg mb-4 text-sm my-2 flex-grow">
                 <p className="font-bold text-coffee-900 mb-1">
-                  {order.order_type === "dine_in"
-                    ? `Dine-in (Meja ${order.table_number})`
-                    : "Take-away"}
+                  {order.order_type === "dine_in" &&
+                    `Dine-in (Meja ${order.table_number})`}
+                  {order.order_type === "take_away" && "Take-away"}
+                  {order.order_type === "booking" &&
+                    `Booking Meja ${order.table_number}`}
                 </p>
                 <p className="text-gray-600 mb-2">
                   Oleh: {order.customer_name}
