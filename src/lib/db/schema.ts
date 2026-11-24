@@ -76,3 +76,14 @@ export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
 });
+
+//---
+
+export const tables = sqliteTable("tables", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  tableNumber: text("table_number").notNull().unique(),
+  status: text("status", { enum: ["available", "occupied", "booked"] })
+    .default("available")
+    .notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});

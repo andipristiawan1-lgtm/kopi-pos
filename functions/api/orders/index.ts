@@ -4,7 +4,6 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
   try {
     const body: any = await context.request.json();
 
-    // 1. Validasi Input
     if (!body.items || body.items.length === 0) {
       return Response.json({ error: "Keranjang kosong" }, { status: 400 });
     }
@@ -15,7 +14,6 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       );
     }
 
-    // 2. Generate Data Pesanan
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const randomStr = Math.floor(Math.random() * 1000)
       .toString()
@@ -23,17 +21,15 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     const orderNumber = `KOPI-${dateStr}-${randomStr}`;
     const now = Math.floor(Date.now() / 1000);
 
-    // 3. Validasi Harga dari Database
+    // 1. Validasi Harga
     let subtotal = 0;
     const menuIds = body.items.map((i: any) => i.menuItemId);
     const placeholders = menuIds.map(() => "?").join(",");
-
     const { results: dbMenus } = await context.env.DB.prepare(
       `SELECT id, price, name FROM menu_items WHERE id IN (${placeholders})`,
     )
       .bind(...menuIds)
       .all();
-
     const menuMap = new Map(dbMenus.map((m: any) => [m.id, m]));
 
     for (const item of body.items) {
@@ -43,56 +39,83 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       subtotal += dbMenu.price * item.quantity;
     }
 
-    // 4. Buat Kode Unik untuk Non-Cash (1 - 999)
+    // 2. Kode Unik (jika non-cash)
     let uniqueCode = 0;
     const paymentMethod = body.paymentMethod || "cash";
-
     if (paymentMethod !== "cash") {
       uniqueCode = Math.floor(Math.random() * 999) + 1;
     }
-
-    // Total akhir = subtotal menu + kode unik
     const totalAmount = subtotal + uniqueCode;
 
-    // 5. Insert Order ke Database (Tambahkan payment_method & unique_code)
-    const insertOrder = await context.env.DB.prepare(
-      `
-      INSERT INTO orders (order_number, order_type, table_number, customer_name, status, total_amount, payment_method, unique_code, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
-    `,
-    )
-      .bind(
-        orderNumber,
-        body.orderType,
-        body.tableNumber || null,
-        body.customerName || "Pelanggan",
-        totalAmount,
-        paymentMethod,
-        uniqueCode,
-        now,
-        now,
+    // 3. Cek meja aktif (jika dine_in)
+    let existingOrder = null;
+    if (body.orderType === "dine_in" && body.tableNumber) {
+      existingOrder = await context.env.DB.prepare(
+        `
+        SELECT id FROM orders WHERE table_number = ? AND order_type = 'dine_in' AND status IN ('pending', 'preparing') LIMIT 1
+      `,
       )
-      .run();
-
-    if (!insertOrder.success) {
-      throw new Error("Gagal insert order ke database");
+        .bind(body.tableNumber)
+        .first<any>();
     }
 
-    // 6. Ambil ID Order yang Baru Dibuat
-    const getOrder = await context.env.DB.prepare(
-      "SELECT id FROM orders WHERE order_number = ?",
-    )
-      .bind(orderNumber)
-      .first<any>();
+    let orderId = 0;
+    let finalOrderNumber = orderNumber;
 
-    if (!getOrder || !getOrder.id) {
-      throw new Error("Gagal mengambil ID order");
+    if (existingOrder) {
+      // SKENARIO: Tambah ke tagihan meja yang sama
+      orderId = existingOrder.id;
+      finalOrderNumber = "KOPI-EXISTING"; // (tidak dipakai, hanya placeholder)
+
+      await context.env.DB.prepare(
+        `
+        UPDATE orders SET total_amount = total_amount + ?, updated_at = ? WHERE id = ?
+      `,
+      )
+        .bind(totalAmount, now, orderId)
+        .run();
+    } else {
+      // SKENARIO: Buat tagihan baru
+      const insertOrder = await context.env.DB.prepare(
+        `
+        INSERT INTO orders (order_number, order_type, table_number, customer_name, status, total_amount, payment_method, unique_code, created_at, updated_at)
+        VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+      `,
+      )
+        .bind(
+          orderNumber,
+          body.orderType,
+          body.tableNumber || null,
+          body.customerName || "Pelanggan",
+          totalAmount,
+          paymentMethod,
+          uniqueCode,
+          now,
+          now,
+        )
+        .run();
+
+      if (!insertOrder.success) throw new Error("Gagal insert order");
+
+      const getOrder = await context.env.DB.prepare(
+        "SELECT id FROM orders WHERE order_number = ?",
+      )
+        .bind(orderNumber)
+        .first<any>();
+      orderId = getOrder.id;
+
+      // Update status meja jadi 'occupied'
+      if (body.orderType === "dine_in" && body.tableNumber) {
+        await context.env.DB.prepare(
+          "UPDATE tables SET status = 'occupied' WHERE table_number = ?",
+        )
+          .bind(body.tableNumber)
+          .run();
+      }
     }
 
-    const orderId = getOrder.id;
+    // 4. Insert order items
     const itemStatements = [];
-
-    // 7. Siapkan Item untuk Batch Insert
     for (const item of body.items) {
       const dbMenu: any = menuMap.get(item.menuItemId);
       itemStatements.push(
@@ -111,21 +134,13 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
         ),
       );
     }
+    if (itemStatements.length > 0) await context.env.DB.batch(itemStatements);
 
-    // 8. Eksekusi Item (Batch)
-    if (itemStatements.length > 0) {
-      await context.env.DB.batch(itemStatements);
-    }
-
-    // 9. Kembalikan Response Sukses
     return Response.json({
       success: true,
-      orderNumber,
-      subtotal,
-      uniqueCode,
+      orderNumber: finalOrderNumber,
       totalAmount,
       paymentMethod,
-      message: "Pesanan berhasil dibuat",
     });
   } catch (error) {
     return Response.json(

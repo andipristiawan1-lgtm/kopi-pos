@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+
 type MenuItem = { id: number; name: string; price: number; category: string };
 type CartItem = MenuItem & { quantity: number };
 
@@ -18,6 +19,8 @@ export default function Order() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [availableTables, setAvailableTables] = useState<any[]>([]);
+
   useEffect(() => {
     const apiUrlMenu = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/menu"
@@ -25,6 +28,9 @@ export default function Order() {
     const apiUrlSettings = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
       : "/api/settings";
+    const apiUrlTables = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/tables"
+      : "/api/tables";
 
     fetch(apiUrlMenu)
       .then((res) => res.json())
@@ -38,6 +44,13 @@ export default function Order() {
         if (data.data) setSettings(data.data);
       })
       .catch((err) => console.error(err));
+
+       
+  fetch(apiUrlTables)
+    .then((res) => res.json())
+    .then((data) => { if (data.data) setAvailableTables(data.data); })
+    .catch((err) => console.error(err));
+
   }, []);
 
   const addToCart = (item: MenuItem) => {
@@ -176,15 +189,21 @@ export default function Order() {
           {orderType === "dine_in" && (
             <div>
               <label className="block text-sm font-medium text-coffee-900 mb-1">
-                Nomor Meja
+                Pilih Meja
               </label>
-              <input
-                type="text"
-                placeholder="Contoh: 05"
+              <select
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg p-2 text-sm"
-              />
+                required
+              >
+                <option value="">-- Pilih Meja yang Tersedia --</option>
+                {availableTables.map((table) => (
+                  <option key={table.id} value={table.table_number}>
+                    Meja {table.table_number}
+                  </option>
+                ))}
+              </select>
             </div>
           )}
 
