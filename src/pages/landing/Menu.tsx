@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-// Tipe data sesuai response API
 type MenuItem = {
   id: number;
   name: string;
@@ -15,10 +14,13 @@ export default function Menu() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState("Semua");
 
   useEffect(() => {
-    // Fetch data dari endpoint yang baru kita buat
-    fetch("/api/menu")
+    const apiUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/menu"
+      : "/api/menu";
+    fetch(apiUrl)
       .then((res) => {
         if (!res.ok) throw new Error("Gagal memuat menu");
         return res.json();
@@ -35,7 +37,10 @@ export default function Menu() {
 
   if (loading) {
     return (
-      <div className="text-center py-20 text-coffee-500">Memuat menu...</div>
+      <div className="text-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-coffee-500 mx-auto mb-4"></div>
+        <p className="text-coffee-500">Memuat menu lezat...</p>
+      </div>
     );
   }
 
@@ -43,63 +48,119 @@ export default function Menu() {
     return (
       <div className="text-center py-20 text-red-500">
         <p>{error}</p>
-        <p className="text-sm mt-2">
-          Pastikan server API (wrangler pages dev) sedang berjalan.
-        </p>
       </div>
     );
   }
 
-  // Kelompokkan menu berdasarkan kategori
-  const groupedMenu = menu.reduce(
-    (acc, item) => {
-      if (!acc[item.category]) acc[item.category] = [];
-      acc[item.category].push(item);
-      return acc;
-    },
-    {} as Record<string, MenuItem[]>,
-  );
+  // Dapatkan daftar kategori unik
+  const categories = [
+    "Semua",
+    ...Array.from(new Set(menu.map((item) => item.category))),
+  ];
+
+  // Filter menu berdasarkan kategori yang dipilih
+  const filteredMenu =
+    activeCategory === "Semua"
+      ? menu
+      : menu.filter((item) => item.category === activeCategory);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-coffee-900 mb-4">Menu Kami</h1>
-        <p className="text-coffee-500">
-          Pilihan kopi dan camilan terbaik untuk menemani harimu.
+      {/* Header Katalog */}
+      <div className="text-center mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-coffee-900 mb-3">
+          Menu Spesial Kami
+        </h1>
+        <p className="text-gray-500 max-w-xl mx-auto">
+          Pilih dari berbagai racikan kopi premium dan camilan lezat yang siap
+          menemani hari Anda.
         </p>
       </div>
 
-      {Object.entries(groupedMenu).map(([category, items]) => (
-        <div key={category} className="mb-12">
-          <h2 className="text-2xl font-bold text-coffee-700 capitalize border-b border-coffee-100 pb-2 mb-6">
-            {category.replace("-", " ")}
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-xl shadow-sm p-6 border border-coffee-50 hover:shadow-md transition"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-lg font-bold text-coffee-900">
-                    {item.name}
-                  </h3>
-                  <span className="font-bold text-coffee-600">
-                    Rp {item.price.toLocaleString("id-ID")}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+      {/* Filter Kategori */}
+      <div className="flex flex-wrap justify-center gap-2 mb-10">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-5 py-2 rounded-full text-sm font-bold capitalize transition-colors ${
+              activeCategory === cat
+                ? "bg-coffee-600 text-white shadow-md"
+                : "bg-white text-coffee-600 border border-coffee-200 hover:bg-coffee-50"
+            }`}
+          >
+            {cat.replace("-", " ")}
+          </button>
+        ))}
+      </div>
 
-      <div className="text-center mt-12 pt-8 border-t border-coffee-100">
-        <p className="text-coffee-700 mb-4">Tertarik memesan?</p>
+      {/* Grid Menu */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredMenu.map((item) => (
+          <div
+            key={item.id}
+            className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden flex flex-col group"
+          >
+            {/* Gambar Menu (Placeholder jika tidak ada gambar) */}
+            <div className="h-48 bg-coffee-100 relative overflow-hidden">
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-5xl opacity-50 group-hover:scale-110 transition-transform duration-500">
+                  ☕
+                </div>
+              )}
+              <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-coffee-800 shadow-sm capitalize">
+                {item.category.replace("-", " ")}
+              </div>
+            </div>
+
+            {/* Detail Menu */}
+            <div className="p-5 flex flex-col flex-grow">
+              <h3 className="text-xl font-bold text-coffee-900 mb-2">
+                {item.name}
+              </h3>
+              <p className="text-sm text-gray-500 mb-4 flex-grow line-clamp-2">
+                {item.description ||
+                  "Dibuat dengan bahan pilihan terbaik untuk Anda."}
+              </p>
+              <div className="flex justify-between items-center mt-auto border-t border-gray-100 pt-4">
+                <span className="text-lg font-bold text-coffee-700">
+                  Rp {item.price.toLocaleString("id-ID")}
+                </span>
+                <Link
+                  to="/order"
+                  className="text-xs font-bold bg-coffee-50 text-coffee-600 px-4 py-2 rounded-full hover:bg-coffee-500 hover:text-white transition"
+                >
+                  + Pesan
+                </Link>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {filteredMenu.length === 0 && (
+        <div className="text-center py-20 text-gray-500">
+          Belum ada menu untuk kategori ini.
+        </div>
+      )}
+
+      {/* CTA di Bawah */}
+      <div className="text-center mt-16 bg-coffee-50 p-8 rounded-2xl border border-coffee-100">
+        <h3 className="text-xl font-bold text-coffee-900 mb-2">
+          Tertarik memesan sekarang?
+        </h3>
+        <p className="text-gray-600 mb-6">
+          Anda bisa memesan online dan memilih meja tanpa perlu menunggu.
+        </p>
         <Link
           to="/order"
-          className="bg-coffee-500 text-white px-8 py-3 rounded-lg font-bold hover:bg-coffee-700 transition"
+          className="inline-block bg-coffee-600 text-white px-8 py-3 rounded-full font-bold hover:bg-coffee-700 transition shadow-md"
         >
           Pesan Online Sekarang
         </Link>

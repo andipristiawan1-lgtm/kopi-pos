@@ -99,22 +99,32 @@ export default function Home() {
       </section>
 
       {/* CALL TO ACTION */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-4xl mx-auto bg-coffee-800 rounded-3xl p-8 md:p-12 text-center text-white relative overflow-hidden shadow-xl">
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-5xl mx-auto bg-gradient-to-br from-coffee-800 to-coffee-900 rounded-3xl p-8 md:p-14 text-center text-white relative overflow-hidden shadow-2xl">
+          {/* Aksen dekoratif */}
+          <div className="absolute top-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-white opacity-5 rounded-full translate-x-1/3 translate-y-1/3"></div>
+
           <div className="relative z-10">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Siap Menikmati Kopi Anda?
             </h2>
-            <p className="text-coffee-200 mb-8 max-w-xl mx-auto">
-              Pesan sekarang atau booking meja untuk pengalaman ngopi yang tak
-              terlupakan.
+            <p className="text-coffee-200 text-lg mb-8 max-w-2xl mx-auto">
+              Jangan biarkan rasa penasaran menunda momen ngopi Anda. Pesan
+              sekarang, atau booking meja untuk pengalaman yang lebih privat.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
                 to="/menu"
-                className="bg-white text-coffee-900 px-8 py-3 rounded-full font-bold hover:bg-gray-100 transition"
+                className="bg-white text-coffee-900 px-8 py-3.5 rounded-full font-bold hover:bg-gray-100 transition shadow-lg w-full sm:w-auto"
               >
                 Lihat Menu
+              </Link>
+              <Link
+                to="/order"
+                className="bg-transparent border-2 border-white text-white px-8 py-3.5 rounded-full font-bold hover:bg-white/10 transition w-full sm:w-auto"
+              >
+                Pesan Online
               </Link>
             </div>
           </div>
