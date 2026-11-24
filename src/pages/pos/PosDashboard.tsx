@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import PrintStruk from "./PrintStruk";
-import AddOrderModal from "./AddOrderModal"; // <-- Import Modal
+import AddOrderModal from "./AddOrderModal";
 import { Link } from "react-router-dom";
 
 type Order = {
@@ -14,14 +14,19 @@ type Order = {
   payment_method: string;
   is_paid: boolean;
   created_at: number;
-  items: { name: string; quantity: number }[];
+  items: {
+    name: string;
+    quantity: number;
+    price_at_time: number;
+    subtotal: number;
+  }[];
 };
 
 export default function PosDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [addMenuOrderId, setAddMenuOrderId] = useState<number | null>(null); // <-- State Modal
+  const [addMenuOrderId, setAddMenuOrderId] = useState<number | null>(null);
 
   const handleLogout = async () => {
     const apiUrl = import.meta.env.DEV
@@ -136,13 +141,28 @@ export default function PosDashboard() {
                 <p className="text-gray-600 mb-2">
                   Oleh: {order.customer_name}
                 </p>
-                <ul className="list-disc pl-4 text-coffee-700 mb-3">
+
+                {/* DAFTAR ITEM DENGAN HARGA */}
+                <ul className="space-y-1 mb-3">
                   {order.items.map((item, idx) => (
-                    <li key={idx}>
-                      {item.quantity}x {item.name}
+                    <li
+                      key={idx}
+                      className="flex justify-between text-coffee-800 text-xs"
+                    >
+                      <span>
+                        {item.quantity}x {item.name}
+                      </span>
+                      <span className="text-gray-500">
+                        {item.quantity > 1 &&
+                          `@${item.price_at_time.toLocaleString("id-ID")}`}
+                        <span className="font-medium text-coffee-900 ml-2">
+                          {item.subtotal.toLocaleString("id-ID")}
+                        </span>
+                      </span>
                     </li>
                   ))}
                 </ul>
+
                 <div className="border-t border-coffee-200 pt-2 flex justify-between text-xs">
                   <span className="text-gray-500">Metode:</span>
                   <span className="font-bold uppercase text-coffee-700">
@@ -214,7 +234,6 @@ export default function PosDashboard() {
         />
       )}
 
-      {/* Modal Tambah Menu */}
       {addMenuOrderId && (
         <AddOrderModal
           orderId={addMenuOrderId}
