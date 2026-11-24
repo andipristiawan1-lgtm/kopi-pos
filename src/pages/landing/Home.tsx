@@ -196,25 +196,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA PENUTUP */}
-      {/* CTA PENUTUP (Desain Solid, Tanpa Gradient) */}
+      {/* CTA PENUTUP (Dipaksa Kontras) */}
       <section className="py-20 px-4 bg-white">
-        <div className="max-w-5xl mx-auto bg-coffee-800 rounded-3xl p-10 md:p-16 text-center text-white shadow-2xl relative overflow-hidden">
-          {/* Aksen dekoratif (Opsional, tidak akan bikin blank) */}
-          <div className="absolute top-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-
+        <div
+          className="max-w-5xl mx-auto rounded-3xl p-10 md:p-16 text-center shadow-2xl relative overflow-hidden"
+          style={{ backgroundColor: "#3e2723" }} // <-- Warna cokelat tua solid (paksa)
+        >
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Siap Menikmati Kopi Anda?
             </h2>
-            <p className="text-coffee-100 text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-gray-200 text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
               Jangan biarkan rasa penasaran menunda momen ngopi Anda. Pesan
               sekarang, atau booking meja untuk pengalaman yang lebih privat.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link
                 to="/order"
-                className="bg-white text-coffee-900 px-8 py-3.5 rounded-full font-bold hover:bg-gray-100 transition shadow-lg"
+                className="bg-white text-gray-900 px-8 py-3.5 rounded-full font-bold hover:bg-gray-100 transition shadow-lg"
               >
                 Pesan Online
               </Link>
