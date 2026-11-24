@@ -11,18 +11,25 @@ type MenuItem = {
 
 export default function Home() {
   const [featuredMenus, setFeaturedMenus] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Ambil 6 menu pertama untuk ditampilkan di carousel
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/menu"
       : "/api/menu";
     fetch(apiUrl)
       .then((res) => res.json())
       .then((data) => {
-        if (data.data) setFeaturedMenus(data.data.slice(0, 6)); // Ambil maksimal 6 menu
+        // Pastikan data.data itu array sebelum disimpan
+        if (data && Array.isArray(data.data)) {
+          setFeaturedMenus(data.data.slice(0, 6));
+        }
+        setLoading(false);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
   }, []);
 
   return (
@@ -30,7 +37,6 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="relative bg-coffee-900 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center"></div>
-
         <div className="relative max-w-6xl mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center z-10">
           <span className="bg-coffee-500/30 text-coffee-100 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 backdrop-blur-sm border border-coffee-500/50">
             Selamat Datang di Warung Kopi
@@ -61,8 +67,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CAROUSEL MENU (Menggantikan CTA biasa) */}
-      <section className="py-20 bg-white overflow-hidden">
+      {/* CAROUSEL MENU */}
+      <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 mb-8 flex justify-between items-end">
           <div>
             <h2 className="text-3xl font-bold text-coffee-900 mb-2">
@@ -80,12 +86,15 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Area Scroll (Carousel) */}
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory scrollbar-hide">
-            {featuredMenus.length === 0 ? (
+            {loading ? (
               <div className="w-full text-center py-10 text-gray-400">
                 Memuat menu...
+              </div>
+            ) : featuredMenus.length === 0 ? (
+              <div className="w-full text-center py-10 text-gray-400">
+                Belum ada menu tersedia.
               </div>
             ) : (
               featuredMenus.map((item) => (
@@ -94,7 +103,7 @@ export default function Home() {
                   to="/order"
                   className="snap-center shrink-0 w-64 md:w-72 bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden group hover:shadow-lg transition"
                 >
-                  <div className="h-48 overflow-hidden relative">
+                  <div className="h-48 overflow-hidden relative bg-gray-100">
                     <img
                       src={
                         item.imageUrl ||
@@ -108,7 +117,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-bold text-coffee-900 text-lg mb-1">
+                    <h3 className="font-bold text-coffee-900 text-lg mb-1 truncate">
                       {item.name}
                     </h3>
                     <p className="text-coffee-600 font-bold">
@@ -120,7 +129,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* Tombol Lihat Menu (Mobile) */}
           <div className="text-center mt-4 md:hidden">
             <Link
               to="/menu"
@@ -144,9 +152,7 @@ export default function Home() {
               nyaman.
             </p>
           </div>
-
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1 */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-coffee-100 hover:shadow-md transition text-center">
               <div className="w-16 h-16 bg-coffee-100 text-coffee-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
                 ☕
@@ -159,7 +165,6 @@ export default function Home() {
                 terbaik untuk menjaga cita rasa.
               </p>
             </div>
-            {/* Card 2 */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-coffee-100 hover:shadow-md transition text-center relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-coffee-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                 Populer
@@ -175,7 +180,6 @@ export default function Home() {
                 bayar DP dengan aman.
               </p>
             </div>
-            {/* Card 3 */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-coffee-100 hover:shadow-md transition text-center">
               <div className="w-16 h-16 bg-coffee-100 text-coffee-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl">
                 ⚡
@@ -192,7 +196,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA PENUTUP (Banner Sederhana) */}
+      {/* CTA PENUTUP */}
       <section className="py-16 px-4 bg-white">
         <div className="max-w-5xl mx-auto bg-gradient-to-br from-coffee-800 to-coffee-900 rounded-3xl p-8 md:p-12 text-center text-white relative overflow-hidden shadow-xl">
           <div className="relative z-10">
