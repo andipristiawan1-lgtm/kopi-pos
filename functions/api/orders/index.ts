@@ -52,8 +52,8 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     if (body.orderType === "dine_in" && body.tableNumber) {
       existingOrder = await context.env.DB.prepare(
         `
-        SELECT id FROM orders WHERE table_number = ? AND order_type = 'dine_in' AND status IN ('pending', 'preparing') LIMIT 1
-      `,
+        SELECT id, order_number FROM orders WHERE table_number = ? AND order_type = 'dine_in' AND status IN ('pending', 'preparing') LIMIT 1
+      `, // <-- PASTIKAN order_number IKUT DI-SELECT
       )
         .bind(body.tableNumber)
         .first<any>();
@@ -63,10 +63,11 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     let finalOrderNumber = orderNumber;
 
     if (existingOrder) {
-      // SKENARIO: Tambah ke tagihan meja yang sama
+      // SKENARIO A: TAMBAH PESANAN KE TAGIHAN MEJA
       orderId = existingOrder.id;
-      finalOrderNumber = "KOPI-EXISTING"; // (tidak dipakai, hanya placeholder)
+      finalOrderNumber = existingOrder.order_number; // <-- GUNAKAN NOMOR ASLI
 
+      // Update total_amount di tabel orders
       await context.env.DB.prepare(
         `
         UPDATE orders SET total_amount = total_amount + ?, updated_at = ? WHERE id = ?
@@ -75,7 +76,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
         .bind(totalAmount, now, orderId)
         .run();
     } else {
-      // SKENARIO: Buat tagihan baru
+      // SKENARIO B: BUAT TAGIHAN BARU
       const insertOrder = await context.env.DB.prepare(
         `
         INSERT INTO orders (order_number, order_type, table_number, customer_name, status, total_amount, payment_method, unique_code, created_at, updated_at)
