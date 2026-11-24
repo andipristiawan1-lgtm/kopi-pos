@@ -83,10 +83,10 @@ export default function Menu() {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-5 py-2 rounded-full text-sm font-bold capitalize transition-colors ${
+            className={`px-5 py-2 rounded-full text-sm font-bold capitalize transition-all duration-200 ${
               activeCategory === cat
-                ? "bg-coffee-600 text-white shadow-md"
-                : "bg-white text-coffee-600 border border-coffee-200 hover:bg-coffee-50"
+                ? "bg-coffee-700 text-white shadow-lg scale-105 ring-2 ring-coffee-300" // <-- Warna lebih gelap & tebal
+                : "bg-white text-gray-600 border border-gray-200 hover:border-coffee-500 hover:text-coffee-600"
             }`}
           >
             {cat.replace("-", " ")}
