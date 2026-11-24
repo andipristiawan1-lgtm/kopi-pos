@@ -11,6 +11,8 @@ import MenuManager from "./pages/admin/MenuManager";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StoreProfile from "./pages/admin/StoreProfile";
 import OrderHistory from "./pages/pos/OrderHistory";
+import TableManager from "./pages/admin/TableManager";
+import Booking from "./pages/landing/Booking";
 
 export default function App() {
   return (
@@ -28,6 +30,7 @@ export default function App() {
             element={<OrderSuccess />}
           />
         </Route>
+        <Route path="/booking" element={<Booking />} />
 
         {/* Auth */}
         <Route path="/login" element={<Login />} />
@@ -72,6 +75,14 @@ export default function App() {
           element={
             <RequireAuth>
               <OrderHistory />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/tables"
+          element={
+            <RequireAuth>
+              <TableManager />
             </RequireAuth>
           }
         />

@@ -61,7 +61,18 @@ export default function AdminDashboard() {
       {/* Menu Navigasi Cepat */}
       <h2 className="text-xl font-bold text-coffee-900 mb-4">Menu Cepat</h2>
       <div className="grid md:grid-cols-3 gap-4">
-       
+        {/* Link Manajemen Meja (BARU) */}
+        <Link
+          to="/admin/tables"
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
+        >
+          <div className="bg-coffee-100 p-3 rounded-full text-2xl">🪑</div>
+          <div>
+            <h3 className="font-bold text-coffee-900">Manajemen Meja</h3>
+            <p className="text-xs text-gray-500">Atur harga DP booking</p>
+          </div>
+        </Link>
+
         <Link
           to="/admin/profile"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
@@ -72,6 +83,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Atur nomor WA & info toko</p>
           </div>
         </Link>
+
         <Link
           to="/pos"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
@@ -82,6 +94,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Lihat antrean & pesanan</p>
           </div>
         </Link>
+
         <Link
           to="/admin/menu"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
@@ -92,6 +105,8 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Tambah/Edit harga & stok</p>
           </div>
         </Link>
+
+        {/* Placeholder untuk fitur mendatang */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 flex items-center gap-4 opacity-50 cursor-not-allowed">
           <div className="bg-gray-100 p-3 rounded-full text-2xl">📊</div>
           <div>
