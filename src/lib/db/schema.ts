@@ -85,15 +85,6 @@ export const tables = sqliteTable("tables", {
   status: text("status", { enum: ["available", "occupied", "booked"] })
     .default("available")
     .notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-});
-//==
-export const tables = sqliteTable("tables", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  tableNumber: text("table_number").notNull().unique(),
-  status: text("status", { enum: ["available", "occupied", "booked"] })
-    .default("available")
-    .notNull(),
   bookingPrice: integer("booking_price").default(0).notNull(), // <-- TAMBAHKAN INI
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });

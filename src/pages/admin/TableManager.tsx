@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 
 export default function TableManager() {
   const [tables, setTables] = useState<any[]>([]);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
   const fetchTables = () => {
@@ -22,7 +21,6 @@ export default function TableManager() {
   }, []);
 
   const handleSave = async (id: number, price: number) => {
-    setSaving(true);
     setMessage("");
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/admin/tables"
@@ -33,7 +31,6 @@ export default function TableManager() {
       body: JSON.stringify({ id, booking_price: price }),
     });
     setMessage("Harga booking berhasil disimpan!");
-    setSaving(false);
     fetchTables();
   };
 
