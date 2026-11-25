@@ -157,8 +157,8 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       itemStatements.push(
         context.env.DB.prepare(
           `
-          INSERT INTO order_items (order_id, menu_item_id, menu_item_name, quantity, price_at_time, subtotal)
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO order_items (order_id, menu_item_id, menu_item_name, quantity, price_at_time, subtotal, kitchen_status, is_additional)
+          VALUES (?, ?, ?, ?, ?, ?, 'pending', 0)
         `,
         ).bind(
           orderId,

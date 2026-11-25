@@ -68,6 +68,14 @@ export const orderItems = sqliteTable("order_items", {
   quantity: integer("quantity").notNull(),
   priceAtTime: integer("price_at_time").notNull(), // snapshot harga
   subtotal: integer("subtotal").notNull(),
+  kitchenStatus: text("kitchen_status", {
+    enum: ["pending", "preparing", "ready"],
+  })
+    .default("pending")
+    .notNull(),
+  isAdditional: integer("is_additional", { mode: "boolean" })
+    .default(false)
+    .notNull(),
 });
 
 //=============no WA dan profile

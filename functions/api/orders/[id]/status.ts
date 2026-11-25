@@ -27,6 +27,18 @@ export const onRequestPatch: PagesFunction<{ DB: D1Database }> = async (
       .bind(newStatus, now, id)
       .run();
 
+    if (newStatus === "preparing") {
+      await context.env.DB.prepare(
+        "UPDATE order_items SET kitchen_status = 'preparing' WHERE order_id = ? AND kitchen_status = 'pending'",
+      ).bind(id).run();
+    }
+
+    if (newStatus === "ready") {
+      await context.env.DB.prepare(
+        "UPDATE order_items SET kitchen_status = 'ready' WHERE order_id = ? AND kitchen_status IN ('pending', 'preparing')",
+      ).bind(id).run();
+    }
+
     // Jika selesai/batal, kosongkan meja
     if (
       (newStatus === "completed" || newStatus === "cancelled") &&

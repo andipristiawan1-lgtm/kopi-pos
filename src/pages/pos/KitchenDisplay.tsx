@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 type KitchenItem = {
   name: string;
   quantity: number;
+  kitchen_status: "pending" | "preparing" | "ready";
+  is_additional: number;
 };
 
 type KitchenOrder = {
@@ -190,9 +192,14 @@ export default function KitchenDisplay() {
 
                           <ul className="mt-4 space-y-2 border-t pt-3">
                             {order.items.map((item, index) => (
-                              <li key={index} className="flex items-start gap-3">
-                                <span className="w-9 h-9 shrink-0 rounded-lg bg-coffee-100 text-coffee-900 flex items-center justify-center font-black">{item.quantity}×</span>
-                                <span className="font-bold leading-5 pt-1">{item.name}</span>
+                              <li key={index} className={`flex items-start gap-3 p-2 rounded-lg ${item.is_additional ? "bg-red-50 border border-red-200" : ""}`}>
+                                <span className={`w-9 h-9 shrink-0 rounded-lg flex items-center justify-center font-black ${item.is_additional ? "bg-red-600 text-white" : "bg-coffee-100 text-coffee-900"}`}>{item.quantity}×</span>
+                                <div className="pt-1">
+                                  <span className="font-bold leading-5">{item.name}</span>
+                                  {item.is_additional === 1 && (
+                                    <span className="ml-2 inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-red-100 text-red-700">Menu Susulan</span>
+                                  )}
+                                </div>
                               </li>
                             ))}
                           </ul>
