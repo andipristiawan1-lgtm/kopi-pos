@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PrintStruk from "./PrintStruk";
 import AddOrderModal from "./AddOrderModal";
+import NewOrderModal from "./NewOrderModal";
 import { Link } from "react-router-dom";
 
 type Order = {
@@ -27,6 +28,7 @@ export default function PosDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [addMenuOrderId, setAddMenuOrderId] = useState<number | null>(null);
+  const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
 
   const handleLogout = async () => {
     const apiUrl = import.meta.env.DEV
@@ -83,7 +85,14 @@ export default function PosDashboard() {
         <h1 className="text-3xl font-bold text-coffee-900">
           Dashboard Kasir (POS)
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsNewOrderOpen(true)}
+            className="text-sm bg-coffee-700 text-white px-4 py-2 rounded-full font-bold hover:bg-coffee-900 transition shadow-md"
+          >
+            + Pesanan Baru
+          </button>
           <div className="text-xs font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-full border border-green-200 flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>{" "}
             Live Antrean
@@ -250,6 +259,13 @@ export default function PosDashboard() {
         <AddOrderModal
           orderId={addMenuOrderId}
           onClose={() => setAddMenuOrderId(null)}
+          onSuccess={fetchOrders}
+        />
+      )}
+
+      {isNewOrderOpen && (
+        <NewOrderModal
+          onClose={() => setIsNewOrderOpen(false)}
           onSuccess={fetchOrders}
         />
       )}

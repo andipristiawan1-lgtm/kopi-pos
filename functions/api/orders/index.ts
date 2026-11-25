@@ -41,7 +41,10 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
 
     // 2. Kode Unik (jika non-cash)
     let uniqueCode = 0;
-    const paymentMethod = body.paymentMethod || "cash";
+    const allowedPayments = ["cash", "transfer", "ewallet"];
+    const paymentMethod = allowedPayments.includes(body.paymentMethod)
+      ? body.paymentMethod
+      : "cash";
     if (paymentMethod !== "cash") {
       uniqueCode = Math.floor(Math.random() * 999) + 1;
     }
@@ -79,8 +82,8 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       // SKENARIO B: BUAT TAGIHAN BARU
       const insertOrder = await context.env.DB.prepare(
         `
-        INSERT INTO orders (order_number, order_type, table_number, customer_name, status, total_amount, payment_method, unique_code, created_at, updated_at)
-        VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+        INSERT INTO orders (order_number, order_type, table_number, customer_name, status, total_amount, payment_method, unique_code, is_paid, created_at, updated_at)
+        VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
       `,
       )
         .bind(
@@ -91,6 +94,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
           totalAmount,
           paymentMethod,
           uniqueCode,
+          body.isPaid === true ? 1 : 0,
           now,
           now,
         )
