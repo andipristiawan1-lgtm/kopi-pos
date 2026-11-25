@@ -4,7 +4,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (
   try {
     // 1. Ambil pesanan aktif
     const { results: orders } = await context.env.DB.prepare(
-      "SELECT * FROM orders WHERE status IN ('pending', 'preparing') ORDER BY created_at ASC",
+      "SELECT * FROM orders WHERE status IN ('pending', 'preparing', 'ready') ORDER BY created_at ASC",
     ).all();
 
     if (!orders || orders.length === 0) {

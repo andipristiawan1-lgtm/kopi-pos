@@ -42,7 +42,7 @@ export const orders = sqliteTable("orders", {
   customerName: text("customer_name"),
   customerPhone: text("customer_phone"),
   status: text("status", {
-    enum: ["pending", "preparing", "completed", "cancelled"],
+    enum: ["pending", "preparing", "ready", "completed", "cancelled"],
   })
     .default("pending")
     .notNull(),

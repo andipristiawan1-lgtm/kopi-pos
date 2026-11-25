@@ -109,6 +109,12 @@ export default function PosDashboard() {
           >
             Riwayat
           </Link>
+          <Link
+            to="/kitchen"
+            className="text-sm bg-amber-50 text-amber-700 px-4 py-1.5 rounded-full font-bold hover:bg-amber-100 transition border border-amber-200"
+          >
+            Dapur
+          </Link>
           <button
             onClick={handleLogout}
             className="text-sm bg-red-50 text-red-600 px-4 py-1.5 rounded-full font-bold hover:bg-red-100 transition border border-red-200"
@@ -233,12 +239,19 @@ export default function PosDashboard() {
                     >
                       Proses
                     </button>
+                  ) : order.status === "preparing" ? (
+                    <button
+                      onClick={() => updateStatus(order.id, "ready")}
+                      className="bg-amber-500 text-slate-950 w-full py-2 rounded text-sm font-bold hover:bg-amber-600"
+                    >
+                      Pesanan Siap
+                    </button>
                   ) : (
                     <button
                       onClick={() => updateStatus(order.id, "completed")}
                       className="bg-green-500 text-white w-full py-2 rounded text-sm font-bold hover:bg-green-600"
                     >
-                      Selesai
+                      Selesai / Antar
                     </button>
                   )}
                 </div>

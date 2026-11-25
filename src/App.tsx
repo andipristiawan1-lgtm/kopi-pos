@@ -16,6 +16,7 @@ import Booking from "./pages/landing/Booking";
 import BookingSettings from "./pages/admin/BookingSettings";
 import UserManager from "./pages/admin/UserManager";
 import InventoryManager from "./pages/admin/InventoryManager";
+import KitchenDisplay from "./pages/pos/KitchenDisplay";
 
 export default function App() {
   return (
@@ -56,6 +57,22 @@ export default function App() {
           element={
             <RequireAuth>
               <OrderHistory />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/pos/kitchen-display"
+          element={
+            <RequireAuth>
+              <KitchenDisplay />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/kitchen"
+          element={
+            <RequireAuth>
+              <KitchenDisplay />
             </RequireAuth>
           }
         />
