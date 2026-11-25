@@ -7,9 +7,9 @@ export default function BookingSettings() {
   const [warningMinutes, setWarningMinutes] = useState(15);
   const [tables, setTables] = useState<any[]>([]);
   const [message, setMessage] = useState("");
+  const [isSavingToggle, setIsSavingToggle] = useState(false);
 
   const fetchData = () => {
-    // Fetch Status Booking
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/booking/status"
       : "/api/booking/status";
@@ -23,7 +23,6 @@ export default function BookingSettings() {
         }
       });
 
-    // Fetch Meja
     const apiTables = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/admin/tables"
       : "/api/admin/tables";
@@ -38,7 +37,43 @@ export default function BookingSettings() {
     fetchData();
   }, []);
 
-  const handleSaveSettings = async () => {
+  // Fungsi Toggle Utama (Simpan Otomatis)
+  const toggleMainStatus = async () => {
+    const newValue = !isEnabled;
+    setIsEnabled(newValue); // Ubah UI dulu agar responsif
+    setIsSavingToggle(true);
+    setMessage("");
+
+    const apiUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/settings"
+      : "/api/settings";
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_booking_enabled: newValue ? "1" : "0" }),
+      });
+
+      if (res.ok) {
+        setMessage(
+          newValue ? "Fitur booking diaktifkan." : "Fitur booking dimatikan.",
+        );
+      } else {
+        setIsEnabled(!newValue); // Kembalikan jika gagal
+        setMessage("Gagal menyimpan pengaturan.");
+      }
+    } catch (error) {
+      setIsEnabled(!newValue);
+      setMessage("Terjadi kesalahan jaringan.");
+    } finally {
+      setIsSavingToggle(false);
+    }
+  };
+
+  // Fungsi Simpan Batas Waktu
+  const saveTimeSettings = async () => {
+    setMessage("");
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
       : "/api/settings";
@@ -46,33 +81,29 @@ export default function BookingSettings() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        is_booking_enabled: isEnabled ? "1" : "0",
         booking_time_limit: timeLimit.toString(),
         booking_warning_minutes: warningMinutes.toString(),
       }),
     });
-
-    if (res.ok) setMessage("Pengaturan booking berhasil disimpan!");
-    else setMessage("Gagal menyimpan pengaturan.");
+    if (res.ok) setMessage("Batas waktu berhasil disimpan!");
+    else setMessage("Gagal menyimpan batas waktu.");
   };
 
-    const toggleTableBookable = async (id: number, currentStatus: any) => {
-      // Paksa baca status sebagai number (0 atau 1)
-      const isCurrentlyBookable = Number(currentStatus) === 1;
-      const newStatus = !isCurrentlyBookable; // Balik nilainya
+  // Fungsi Toggle Meja
+  const toggleTableBookable = async (id: number, currentStatus: any) => {
+    const isCurrentlyBookable = Number(currentStatus) === 1;
+    const newStatus = !isCurrentlyBookable;
 
-      const apiUrl = import.meta.env.DEV
-        ? "http://127.0.0.1:8788/api/admin/tables"
-        : "/api/admin/tables";
-
-      await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, is_bookable: newStatus }),
-      });
-
-      fetchData(); // Refresh data dari database
-    };
+    const apiUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/admin/tables"
+      : "/api/admin/tables";
+    await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, is_bookable: newStatus }),
+    });
+    fetchData(); // Refresh data dari database
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -87,13 +118,18 @@ export default function BookingSettings() {
         <h1 className="text-2xl font-bold text-coffee-900 mb-6">
           Pengaturan Booking
         </h1>
+
+        {/* Notifikasi */}
         {message && (
-          <div className="bg-green-50 text-green-700 p-3 rounded mb-4">
+          <div
+            className={`p-3 rounded mb-4 text-sm ${message.includes("Gagal") || message.includes("kesalahan") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}
+          >
             {message}
           </div>
         )}
 
         <div className="space-y-6">
+          {/* Sakelar Utama */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
             <div>
               <h3 className="font-bold text-gray-800">
@@ -103,18 +139,19 @@ export default function BookingSettings() {
                 Pelanggan dapat melakukan booking meja.
               </p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isEnabled}
-                onChange={(e) => setIsEnabled(e.target.checked)}
-                className="sr-only peer"
+            <button
+              onClick={toggleMainStatus}
+              disabled={isSavingToggle}
+              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isEnabled ? "bg-green-500" : "bg-gray-300"} ${isSavingToggle ? "opacity-50" : ""}`}
+            >
+              <span
+                className={`inline-block w-5 h-5 transform bg-white rounded-full transition-transform ${isEnabled ? "translate-x-5" : "translate-x-1"}`}
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-            </label>
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Batas Waktu */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">
                 Batas Waktu Booking (Menit)
@@ -140,14 +177,15 @@ export default function BookingSettings() {
           </div>
 
           <button
-            onClick={handleSaveSettings}
+            onClick={saveTimeSettings}
             className="bg-coffee-600 text-white px-6 py-2 rounded font-bold hover:bg-coffee-700"
           >
-            Simpan Pengaturan
+            Simpan Batas Waktu
           </button>
         </div>
       </div>
 
+      {/* Daftar Meja */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-coffee-100">
         <h2 className="text-xl font-bold text-coffee-900 mb-4">
           Meja yang Bisa Dibooking
@@ -156,16 +194,16 @@ export default function BookingSettings() {
           {tables.map((table) => (
             <div
               key={table.id}
-              className={`p-4 rounded-lg border flex justify-between items-center ${table.is_bookable ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}
+              className={`p-4 rounded-lg border flex justify-between items-center ${Number(table.is_bookable) === 1 ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}
             >
               <span className="font-bold text-gray-800">
                 Meja {table.table_number}
               </span>
               <button
                 onClick={() => toggleTableBookable(table.id, table.is_bookable)}
-                className={`text-xs px-3 py-1 rounded font-bold ${table.is_bookable ? "bg-green-200 text-green-800" : "bg-gray-300 text-gray-600"}`}
+                className={`text-xs px-3 py-1 rounded font-bold ${Number(table.is_bookable) === 1 ? "bg-green-200 text-green-800" : "bg-gray-300 text-gray-600"}`}
               >
-                {table.is_bookable ? "Aktif" : "Mati"}
+                {Number(table.is_bookable) === 1 ? "Aktif" : "Mati"}
               </button>
             </div>
           ))}
