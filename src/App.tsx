@@ -15,6 +15,7 @@ import TableManager from "./pages/admin/TableManager";
 import Booking from "./pages/landing/Booking";
 import BookingSettings from "./pages/admin/BookingSettings";
 import UserManager from "./pages/admin/UserManager";
+import InventoryManager from "./pages/admin/InventoryManager";
 
 export default function App() {
   return (
@@ -108,6 +109,14 @@ export default function App() {
           element={
             <RequireAuth>
               <UserManager />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/inventory"
+          element={
+            <RequireAuth>
+              <InventoryManager />
             </RequireAuth>
           }
         />

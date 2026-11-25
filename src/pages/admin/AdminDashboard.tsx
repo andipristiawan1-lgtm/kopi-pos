@@ -133,6 +133,17 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
+        <Link
+          to="/admin/inventory"
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
+        >
+          <div className="bg-coffee-100 p-3 rounded-full text-2xl">📦</div>
+          <div>
+            <h3 className="font-bold text-coffee-900">Kelola Stok & Belanja</h3>
+            <p className="text-xs text-gray-500">Barang, stok, dan pembelian</p>
+          </div>
+        </Link>
+
         {/* Placeholder untuk fitur mendatang */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 flex items-center gap-4 opacity-50 cursor-not-allowed">
           <div className="bg-gray-100 p-3 rounded-full text-2xl">📊</div>

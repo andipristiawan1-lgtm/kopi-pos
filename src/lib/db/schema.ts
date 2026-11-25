@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 
 // ============================================
 // USERS — Owner & Kasir
@@ -88,5 +88,46 @@ export const tables = sqliteTable("tables", {
   isBookable: integer("is_bookable", { mode: "boolean" })
     .default(true)
     .notNull(), // <-- TAMBAHKAN
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+// ============================================
+// INVENTORY — Bahan & Stok UMKM
+// ============================================
+export const inventoryItems = sqliteTable("inventory_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  unit: text("unit").notNull(),
+  stock: real("stock").default(0).notNull(),
+  minimumStock: real("minimum_stock").default(0).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+export const purchases = sqliteTable("purchases", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  purchaseNumber: text("purchase_number").notNull().unique(),
+  supplierName: text("supplier_name"),
+  invoiceNumber: text("invoice_number"),
+  purchaseDate: integer("purchase_date", { mode: "timestamp" }).notNull(),
+  status: text("status").default("received").notNull(),
+  paymentStatus: text("payment_status").default("unpaid").notNull(),
+  notes: text("notes"),
+  totalAmount: integer("total_amount").default(0).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+});
+
+export const purchaseItems = sqliteTable("purchase_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  purchaseId: integer("purchase_id")
+    .notNull()
+    .references(() => purchases.id, { onDelete: "cascade" }),
+  itemId: integer("item_id").references(() => inventoryItems.id, { onDelete: "set null" }),
+  itemName: text("item_name").notNull(),
+  unit: text("unit").notNull(),
+  quantity: real("quantity").notNull(),
+  unitPrice: integer("unit_price").notNull(),
+  subtotal: integer("subtotal").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
