@@ -7,17 +7,21 @@ type MenuItem = {
   price: number;
   category: string;
   is_available: number;
+  image_url: string | null;
 };
 
 export default function MenuManager() {
   const [menus, setMenus] = useState<MenuItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: 0,
     category: "kopi",
+    image_url: "",
   });
 
   const fetchMenus = () => {
@@ -37,6 +41,8 @@ export default function MenuManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
+    setMessage("");
     const apiUrl = import.meta.env.DEV
       ? editingItem
         ? `http://127.0.0.1:8788/api/admin/menu/${editingItem.id}`
@@ -45,16 +51,24 @@ export default function MenuManager() {
         ? `/api/admin/menu/${editingItem.id}`
         : "/api/admin/menu";
 
-    await fetch(apiUrl, {
+    const res = await fetch(apiUrl, {
       method: editingItem ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...formData, is_available: true }),
     });
 
-    setIsModalOpen(false);
-    setEditingItem(null);
-    setFormData({ name: "", description: "", price: 0, category: "kopi" });
-    fetchMenus();
+    const result = await res.json();
+
+    setIsSaving(false);
+    if (res.ok) {
+      setIsModalOpen(false);
+      setEditingItem(null);
+      setFormData({ name: "", description: "", price: 0, category: "kopi", image_url: "" });
+      fetchMenus();
+      setMessage("Menu berhasil disimpan.");
+    } else {
+      setMessage(result.error || "Terjadi kesalahan. Silakan coba lagi.");
+    }
   };
 
   const handleEdit = (item: MenuItem) => {
@@ -64,6 +78,7 @@ export default function MenuManager() {
       description: item.description,
       price: item.price,
       category: item.category,
+      image_url: item.image_url || "",
     });
     setIsModalOpen(true);
   };
@@ -89,6 +104,7 @@ export default function MenuManager() {
               description: "",
               price: 0,
               category: "kopi",
+              image_url: "",
             });
             setIsModalOpen(true);
           }}
@@ -98,6 +114,12 @@ export default function MenuManager() {
         </button>
       </div>
 
+      {message && (
+        <div className={`mb-4 p-3 rounded text-sm ${message.includes("berhasil") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+          {message}
+        </div>
+      )}
+
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-coffee-50 text-coffee-900 border-b">
@@ -106,13 +128,27 @@ export default function MenuManager() {
               <th className="p-4">Kategori</th>
               <th className="p-4">Harga</th>
               <th className="p-4">Status</th>
+              <th className="p-4">Gambar</th>
               <th className="p-4 text-right">Aksi</th>
             </tr>
           </thead>
           <tbody>
             {menus.map((item) => (
               <tr key={item.id} className="border-b hover:bg-gray-50">
-                <td className="p-4 font-medium">{item.name}</td>
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-12 h-12 rounded-lg object-cover border"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-coffee-100 flex items-center justify-center text-coffee-500">☕</div>
+                    )}
+                    <span className="font-medium">{item.name}</span>
+                  </div>
+                </td>
                 <td className="p-4 capitalize">{item.category}</td>
                 <td className="p-4">Rp {item.price.toLocaleString("id-ID")}</td>
                 <td className="p-4">
@@ -121,6 +157,20 @@ export default function MenuManager() {
                   >
                     {item.is_available ? "Tersedia" : "Habis"}
                   </span>
+                </td>
+                <td className="p-4">
+                  {item.image_url && (
+                    <div className="w-16 h-16 rounded-lg overflow-hidden border">
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
                 </td>
                 <td className="p-4 text-right space-x-2">
                   <button
@@ -202,6 +252,35 @@ export default function MenuManager() {
                   className="w-full border p-2 rounded"
                 />
               </div>
+              <div>
+                <label className="block text-sm mb-1">
+                  URL Gambar Menu
+                </label>
+                <input
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) =>
+                    setFormData({ ...formData, image_url: e.target.value })
+                  }
+                  className="w-full border p-2 rounded"
+                  placeholder="https://...jpg atau https://...png"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Gunakan tautan langsung dari Imgur, Blogger, atau hosting gambar.
+                </p>
+                {formData.image_url && (
+                  <div className="mt-3 h-36 rounded-lg overflow-hidden border bg-gray-100">
+                    <img
+                      src={formData.image_url}
+                      alt="Preview menu"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   type="button"
@@ -214,7 +293,7 @@ export default function MenuManager() {
                   type="submit"
                   className="px-4 py-2 bg-coffee-500 text-white rounded font-bold"
                 >
-                  Simpan
+                  {isSaving ? "Menyimpan..." : "Simpan"}
                 </button>
               </div>
             </form>

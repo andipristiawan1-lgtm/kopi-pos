@@ -38,13 +38,30 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     const body: any = await context.request.json();
     const now = Math.floor(Date.now() / 1000);
 
+    const name = String(body.name || "").trim();
+    const price = Number(body.price);
+    const category = String(body.category || "").trim();
+    const description = String(body.description || "").trim();
+    const imageUrl = String(body.image_url || "").trim();
+
+    if (!name || !category || !Number.isInteger(price) || price < 0) {
+      return Response.json({ error: "Data menu tidak valid" }, { status: 400 });
+    }
+
+    if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
+      return Response.json(
+        { error: "URL gambar harus diawali http atau https" },
+        { status: 400 },
+      );
+    }
+
     await context.env.DB.prepare(
       `
-      INSERT INTO menu_items (name, description, price, category, is_available, created_at)
-      VALUES (?, ?, ?, ?, 1, ?)
+      INSERT INTO menu_items (name, description, price, category, is_available, image_url, created_at)
+      VALUES (?, ?, ?, ?, 1, ?, ?)
     `,
     )
-      .bind(body.name, body.description || "", body.price, body.category, now)
+      .bind(name, description, price, category, imageUrl || null, now)
       .run();
 
     return Response.json({ success: true });

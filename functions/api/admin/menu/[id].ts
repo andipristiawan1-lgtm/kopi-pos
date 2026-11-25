@@ -22,17 +22,37 @@ export const onRequestPut: PagesFunction<{ DB: D1Database }> = async (
     const id = context.params.id;
     const body: any = await context.request.json();
 
+    const name = String(body.name || "").trim();
+    const price = Number(body.price);
+    const category = String(body.category || "").trim();
+    const description = String(body.description || "").trim();
+    const imageUrl = String(body.image_url || "").trim();
+
+    if (!name || !category || !Number.isInteger(price) || price < 0) {
+      return Response.json({ error: "Data menu tidak valid" }, { status: 400 });
+    }
+
+    if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
+      return Response.json(
+        { error: "URL gambar harus diawali http atau https" },
+        { status: 400 },
+      );
+    }
+
     await context.env.DB.prepare(
       `
-      UPDATE menu_items SET name = ?, description = ?, price = ?, category = ?, is_available = ? WHERE id = ?
+      UPDATE menu_items
+      SET name = ?, description = ?, price = ?, category = ?, is_available = ?, image_url = ?
+      WHERE id = ?
     `,
     )
       .bind(
-        body.name,
-        body.description,
-        body.price,
-        body.category,
+        name,
+        description,
+        price,
+        category,
         body.is_available ? 1 : 0,
+        imageUrl || null,
         id,
       )
       .run();
