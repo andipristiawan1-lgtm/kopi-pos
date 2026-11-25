@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 type KitchenItem = {
+  id: number;
   name: string;
   quantity: number;
   kitchen_status: "pending" | "preparing" | "ready" | "served";
   is_additional: number;
+  served_at: number | null;
 };
 
 type KitchenOrder = {
@@ -46,6 +48,7 @@ export default function KitchenDisplay() {
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [previousPendingCount, setPreviousPendingCount] = useState(0);
+  const [selectedReadyItems, setSelectedReadyItems] = useState<number[]>([]);
 
   const fetchOrders = async (playNotification = false) => {
     const apiUrl = import.meta.env.DEV
@@ -126,15 +129,28 @@ export default function KitchenDisplay() {
       : `/api/orders/${orderId}/serve`;
 
     try {
-      const res = await fetch(apiUrl, { method: "POST" });
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemIds: selectedReadyItems }),
+      });
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error || "Gagal menyerahkan pesanan");
+      setSelectedReadyItems([]);
       await fetchOrders(false);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Gagal menyerahkan pesanan");
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  const toggleReadyItem = (itemId: number) => {
+    setSelectedReadyItems((current) =>
+      current.includes(itemId)
+        ? current.filter((id) => id !== itemId)
+        : [...current, itemId],
+    );
   };
 
   const elapsedMinutes = (createdAt: number) => {
@@ -213,7 +229,18 @@ export default function KitchenDisplay() {
                           <ul className="mt-4 space-y-2 border-t pt-3">
                             {order.items.filter((item) => item.kitchen_status !== "served").map((item, index) => (
                               <li key={index} className={`flex items-start gap-3 p-2 rounded-lg ${item.is_additional ? "bg-red-50 border border-red-200" : ""}`}>
-                                <span className={`w-9 h-9 shrink-0 rounded-lg flex items-center justify-center font-black ${item.is_additional ? "bg-red-600 text-white" : "bg-coffee-100 text-coffee-900"}`}>{item.quantity}×</span>
+                                {item.kitchen_status === "ready" ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleReadyItem(item.id)}
+                                    className={`w-9 h-9 shrink-0 rounded-lg flex items-center justify-center font-black border ${selectedReadyItems.includes(item.id) ? "bg-green-600 text-white border-green-600" : "bg-white text-slate-400 border-slate-300"}`}
+                                    aria-label={`Pilih ${item.name}`}
+                                  >
+                                    {selectedReadyItems.includes(item.id) ? "✓" : item.quantity}
+                                  </button>
+                                ) : (
+                                  <span className={`w-9 h-9 shrink-0 rounded-lg flex items-center justify-center font-black ${item.is_additional ? "bg-red-600 text-white" : "bg-coffee-100 text-coffee-900"}`}>{item.quantity}×</span>
+                                )}
                                 <div className="pt-1">
                                   <span className="font-bold leading-5">{item.name}</span>
                                   {item.is_additional === 1 && (
@@ -226,6 +253,24 @@ export default function KitchenDisplay() {
                               </li>
                             ))}
                           </ul>
+
+                          {order.items.some((item) => item.kitchen_status === "served") && (
+                            <div className="mt-3 pt-3 border-t">
+                              <p className="text-xs font-black uppercase text-slate-400 mb-2">Sudah diserahkan</p>
+                              <ul className="space-y-1">
+                                {order.items.filter((item) => item.kitchen_status === "served").map((item, index) => (
+                                  <li key={index} className="flex justify-between items-center text-sm text-slate-500">
+                                    <span><span className="text-green-600 mr-1">✓</span>{item.quantity}× {item.name}</span>
+                                    {item.served_at && (
+                                      <span className="text-xs">
+                                        {new Date(item.served_at * 1000).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                                      </span>
+                                    )}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
                         </div>
 
                         <div className="p-3 border-t bg-slate-50">
@@ -240,14 +285,30 @@ export default function KitchenDisplay() {
                             </button>
                           )}
                           {status === "ready" && (
-                            <button
-                              type="button"
-                              onClick={() => serveReadyItems(order.id)}
-                              disabled={updatingId === order.id}
-                              className="w-full h-12 rounded-lg bg-green-600 hover:bg-green-700 text-white font-black disabled:opacity-50"
-                            >
-                              {updatingId === order.id ? "Memproses..." : "Serahkan Pesanan Siap"}
-                            </button>
+                            <div className="space-y-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const readyIds = order.items
+                                    .filter((item) => item.kitchen_status === "ready")
+                                    .map((item) => item.id);
+                                  setSelectedReadyItems(readyIds);
+                                }}
+                                className="w-full h-9 rounded-lg bg-white border border-green-200 text-green-700 text-sm font-bold"
+                              >
+                                Pilih Semua yang Siap
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => serveReadyItems(order.id)}
+                                disabled={updatingId === order.id || selectedReadyItems.length === 0}
+                                className="w-full h-12 rounded-lg bg-green-600 hover:bg-green-700 text-white font-black disabled:opacity-50"
+                              >
+                                {updatingId === order.id
+                                  ? "Memproses..."
+                                  : `Serahkan ${selectedReadyItems.length > 0 ? `${selectedReadyItems.length} Item Terpilih` : "Item Terpilih"}`}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </article>

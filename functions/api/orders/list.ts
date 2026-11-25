@@ -16,7 +16,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (
     for (const order of orders) {
       // Tambahkan price_at_time dan subtotal di sini
       const { results: items } = await context.env.DB.prepare(
-        "SELECT menu_item_name as name, quantity, price_at_time, subtotal, kitchen_status, is_additional FROM order_items WHERE order_id = ?",
+        "SELECT id, menu_item_name as name, quantity, price_at_time, subtotal, kitchen_status, is_additional, served_at FROM order_items WHERE order_id = ?",
       )
         .bind(order.id)
         .all();

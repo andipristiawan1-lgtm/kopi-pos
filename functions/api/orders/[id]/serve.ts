@@ -3,7 +3,11 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
 ) => {
   try {
     const id = context.params.id;
+    const body: any = await context.request.json().catch(() => ({}));
     const now = Math.floor(Date.now() / 1000);
+    const itemIds = Array.isArray(body.itemIds)
+      ? body.itemIds.map((itemId: unknown) => Number(itemId)).filter(Number.isInteger)
+      : null;
 
     const order = await context.env.DB.prepare(
       "SELECT id, order_type, table_number, status FROM orders WHERE id = ?",
@@ -19,12 +23,6 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       return Response.json({ error: "Pesanan sudah selesai atau dibatalkan" }, { status: 409 });
     }
 
-    await context.env.DB.prepare(
-      "UPDATE order_items SET kitchen_status = 'served' WHERE order_id = ? AND kitchen_status = 'ready'",
-    )
-      .bind(id)
-      .run();
-
     const remaining = await context.env.DB.prepare(
       "SELECT COUNT(*) AS total FROM order_items WHERE order_id = ? AND kitchen_status != 'served'",
     )
@@ -36,6 +34,26 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     )
       .bind(id)
       .first<{ total: number }>();
+
+    if (itemIds) {
+      if (itemIds.length === 0) {
+        return Response.json({ error: "Pilih minimal satu item yang siap" }, { status: 400 });
+      }
+
+      const placeholders = itemIds.map(() => "?").join(",");
+      await context.env.DB.prepare(
+        `UPDATE order_items SET kitchen_status = 'served', served_at = ?
+         WHERE order_id = ? AND kitchen_status = 'ready' AND id IN (${placeholders})`,
+      )
+        .bind(now, id, ...itemIds)
+        .run();
+    } else {
+      await context.env.DB.prepare(
+        "UPDATE order_items SET kitchen_status = 'served', served_at = ? WHERE order_id = ? AND kitchen_status = 'ready'",
+      )
+        .bind(now, id)
+        .run();
+    }
 
     if ((remaining?.total || 0) === 0) {
       await context.env.DB.prepare(

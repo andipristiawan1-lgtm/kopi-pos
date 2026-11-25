@@ -76,6 +76,7 @@ export const orderItems = sqliteTable("order_items", {
   isAdditional: integer("is_additional", { mode: "boolean" })
     .default(false)
     .notNull(),
+  servedAt: integer("served_at", { mode: "timestamp" }),
 });
 
 //=============no WA dan profile
