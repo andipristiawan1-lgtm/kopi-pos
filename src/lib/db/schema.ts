@@ -69,7 +69,7 @@ export const orderItems = sqliteTable("order_items", {
   priceAtTime: integer("price_at_time").notNull(), // snapshot harga
   subtotal: integer("subtotal").notNull(),
   kitchenStatus: text("kitchen_status", {
-    enum: ["pending", "preparing", "ready"],
+    enum: ["pending", "preparing", "ready", "served"],
   })
     .default("pending")
     .notNull(),

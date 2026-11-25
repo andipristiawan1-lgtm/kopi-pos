@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 type KitchenItem = {
   name: string;
   quantity: number;
-  kitchen_status: "pending" | "preparing" | "ready";
+  kitchen_status: "pending" | "preparing" | "ready" | "served";
   is_additional: number;
 };
 
@@ -117,6 +117,26 @@ export default function KitchenDisplay() {
     }
   };
 
+  const serveReadyItems = async (orderId: number) => {
+    setUpdatingId(orderId);
+    setError("");
+
+    const apiUrl = import.meta.env.DEV
+      ? `http://127.0.0.1:8788/api/orders/${orderId}/serve`
+      : `/api/orders/${orderId}/serve`;
+
+    try {
+      const res = await fetch(apiUrl, { method: "POST" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(data?.error || "Gagal menyerahkan pesanan");
+      await fetchOrders(false);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Gagal menyerahkan pesanan");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const elapsedMinutes = (createdAt: number) => {
     const elapsed = Math.floor((Date.now() - createdAt * 1000) / 60000);
     return Math.max(0, elapsed);
@@ -191,7 +211,7 @@ export default function KitchenDisplay() {
                           {order.customer_name && <p className="mt-2 text-xs text-slate-500">Untuk: <strong>{order.customer_name}</strong></p>}
 
                           <ul className="mt-4 space-y-2 border-t pt-3">
-                            {order.items.map((item, index) => (
+                            {order.items.filter((item) => item.kitchen_status !== "served").map((item, index) => (
                               <li key={index} className={`flex items-start gap-3 p-2 rounded-lg ${item.is_additional ? "bg-red-50 border border-red-200" : ""}`}>
                                 <span className={`w-9 h-9 shrink-0 rounded-lg flex items-center justify-center font-black ${item.is_additional ? "bg-red-600 text-white" : "bg-coffee-100 text-coffee-900"}`}>{item.quantity}×</span>
                                 <div className="pt-1">
@@ -199,6 +219,9 @@ export default function KitchenDisplay() {
                                   {item.is_additional === 1 && (
                                     <span className="ml-2 inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-red-100 text-red-700">Menu Susulan</span>
                                   )}
+                                  <span className={`ml-2 inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${item.kitchen_status === "ready" ? "bg-green-100 text-green-700" : item.kitchen_status === "preparing" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
+                                    {item.kitchen_status === "ready" ? "Siap" : item.kitchen_status === "preparing" ? "Dibuat" : "Baru"}
+                                  </span>
                                 </div>
                               </li>
                             ))}
@@ -217,7 +240,14 @@ export default function KitchenDisplay() {
                             </button>
                           )}
                           {status === "ready" && (
-                            <div className="h-12 rounded-lg bg-green-100 text-green-800 flex items-center justify-center font-black">✓ Menunggu Diambil/Pelayan</div>
+                            <button
+                              type="button"
+                              onClick={() => serveReadyItems(order.id)}
+                              disabled={updatingId === order.id}
+                              className="w-full h-12 rounded-lg bg-green-600 hover:bg-green-700 text-white font-black disabled:opacity-50"
+                            >
+                              {updatingId === order.id ? "Memproses..." : "Serahkan Pesanan Siap"}
+                            </button>
                           )}
                         </div>
                       </article>
