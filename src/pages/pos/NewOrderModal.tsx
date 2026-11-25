@@ -149,7 +149,7 @@ export default function NewOrderModal({
 
         <div className="flex-1 min-h-0 grid lg:grid-cols-[minmax(0,1fr)_390px]">
           <div className="min-h-0 flex flex-col">
-            <div className="bg-white border-b p-3 md:p-4 space-y-3">
+            <div className="bg-white border-b p-3 md:p-4 space-y-3 shrink-0">
               <div className="lg:hidden grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => setOrderType("dine_in")} className={`h-10 rounded-lg text-sm font-bold ${orderType === "dine_in" ? "bg-coffee-700 text-white" : "bg-slate-100 text-slate-600"}`}>Dine-in</button>
                 <button type="button" onClick={() => { setOrderType("take_away"); setTableNumber(""); }} className={`h-10 rounded-lg text-sm font-bold ${orderType === "take_away" ? "bg-coffee-700 text-white" : "bg-slate-100 text-slate-600"}`}>Take-away</button>
@@ -161,15 +161,17 @@ export default function NewOrderModal({
                 </select>
               )}
               <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Nama pelanggan (opsional)" className="lg:hidden w-full h-10 px-3 rounded-lg border border-slate-200 text-sm" />
-            </div>
-            <div className="relative">
-              <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama menu..." className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-coffee-500 outline-none" />
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {categories.map((itemCategory) => (
-                <button key={itemCategory} type="button" onClick={() => setCategory(itemCategory)} className={`shrink-0 px-4 h-10 rounded-full text-sm font-bold capitalize ${category === itemCategory ? "bg-coffee-700 text-white" : "bg-slate-100 text-slate-600"}`}>{itemCategory.replace("-", " ")}</button>
-              ))}
+
+              <div className="relative">
+                <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35m1.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cari nama menu..." className="w-full h-12 pl-10 pr-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100 outline-none" />
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                {categories.map((itemCategory) => (
+                  <button key={itemCategory} type="button" onClick={() => setCategory(itemCategory)} className={`shrink-0 px-4 h-10 rounded-full text-sm font-bold capitalize ${category === itemCategory ? "bg-coffee-700 text-white shadow-sm" : "bg-slate-100 text-slate-600"}`}>{itemCategory.replace("-", " ")}</button>
+                ))}
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-3 md:p-4 pb-28 lg:pb-4">
               {loading ? (
