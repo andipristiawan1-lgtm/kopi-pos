@@ -31,10 +31,8 @@ export default function App() {
             path="/order/success/:orderNumber"
             element={<OrderSuccess />}
           />
+          <Route path="/booking" element={<Booking />} />
         </Route>
-
-        {/* Booking (Tanpa Navbar/Footer) */}
-        <Route path="/booking" element={<Booking />} />
 
         {/* =========================================
             RUTE AUTH
