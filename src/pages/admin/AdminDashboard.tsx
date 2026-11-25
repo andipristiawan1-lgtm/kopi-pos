@@ -78,6 +78,16 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Atur nomor WA & info toko</p>
           </div>
         </Link>
+         <Link
+          to="/pos"
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
+        >
+          <div className="bg-coffee-100 p-3 rounded-full text-2xl">🧑‍🍳</div>
+          <div>
+            <h3 className="font-bold text-coffee-900">Buka Kasir (POS)</h3>
+            <p className="text-xs text-gray-500">Lihat antrean & pesanan</p>
+          </div>
+        </Link>
         {/* Link Manajemen Meja (BARU) */}
         <Link
           to="/admin/tables"
@@ -100,16 +110,7 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-        <Link
-          to="/pos"
-          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
-        >
-          <div className="bg-coffee-100 p-3 rounded-full text-2xl">🧑‍🍳</div>
-          <div>
-            <h3 className="font-bold text-coffee-900">Buka Kasir (POS)</h3>
-            <p className="text-xs text-gray-500">Lihat antrean & pesanan</p>
-          </div>
-        </Link>
+       
         {/* TAMBAHKAN LINK MANAJEMEN KASIR INI */}
         <Link
           to="/admin/users"
