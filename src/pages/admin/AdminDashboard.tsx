@@ -61,6 +61,16 @@ export default function AdminDashboard() {
       {/* Menu Navigasi Cepat */}
       <h2 className="text-xl font-bold text-coffee-900 mb-4">Menu Cepat</h2>
       <div className="grid md:grid-cols-3 gap-4">
+        <Link
+          to="/admin/profile"
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
+        >
+          <div className="bg-coffee-100 p-3 rounded-full text-2xl">⚙️</div>
+          <div>
+            <h3 className="font-bold text-coffee-900">Profil Toko</h3>
+            <p className="text-xs text-gray-500">Atur nomor WA & info toko</p>
+          </div>
+        </Link>
         {/* Link Manajemen Meja (BARU) */}
         <Link
           to="/admin/tables"
@@ -72,15 +82,14 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Atur harga DP booking</p>
           </div>
         </Link>
-
         <Link
-          to="/admin/profile"
+          to="/admin/booking"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
         >
-          <div className="bg-coffee-100 p-3 rounded-full text-2xl">⚙️</div>
+          <div className="bg-coffee-100 p-3 rounded-full text-2xl">⏱️</div>
           <div>
-            <h3 className="font-bold text-coffee-900">Profil Toko</h3>
-            <p className="text-xs text-gray-500">Atur nomor WA & info toko</p>
+            <h3 className="font-bold text-coffee-900">Pengaturan Booking</h3>
+            <p className="text-xs text-gray-500">Atur waktu & meja booking</p>
           </div>
         </Link>
 

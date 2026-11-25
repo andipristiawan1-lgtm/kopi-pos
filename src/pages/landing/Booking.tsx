@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 type MenuItem = { id: number; name: string; price: number };
 type CartItem = MenuItem & { quantity: number };
@@ -9,6 +9,7 @@ export default function Booking() {
   const [tables, setTables] = useState<any[]>([]);
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [bookingInfo, setBookingInfo] = useState<any>(null);
 
   const [form, setForm] = useState({
     tableNumber: "",
@@ -19,7 +20,15 @@ export default function Booking() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Fetch Meja (termasuk yang booked untuk ditampilkan statusnya)
+    // 1. Fetch Status Booking (Aktif/Mati & Batas Waktu)
+    const apiStatus = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/booking/status"
+      : "/api/booking/status";
+    fetch(apiStatus)
+      .then((res) => res.json())
+      .then((data) => setBookingInfo(data));
+
+    // 2. Fetch Meja
     const apiUrlTables = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/tables"
       : "/api/tables";
@@ -29,7 +38,7 @@ export default function Booking() {
         if (data.data) setTables(data.data);
       });
 
-    // Fetch Menu
+    // 3. Fetch Menu
     const apiUrlMenu = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/menu"
       : "/api/menu";
@@ -50,8 +59,10 @@ export default function Booking() {
       return [...prev, { ...item, quantity: 1 }];
     });
   };
+
   const removeFromCart = (id: number) =>
     setCart((prev) => prev.filter((i) => i.id !== id));
+
   const totalMenu = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
@@ -83,6 +94,28 @@ export default function Booking() {
       setLoading(false);
     }
   };
+
+  // TAMPILKAN PESAN JIKA FITUR BOOKING DIMATIKAN
+  if (bookingInfo && !bookingInfo.isEnabled) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 text-center">
+        <div className="text-6xl mb-4">🚫</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">
+          Booking Sedang Ditutup
+        </h1>
+        <p className="text-gray-500 mb-8 max-w-md">
+          Mohon maaf, pemilik warung sedang menonaktifkan fitur booking untuk
+          sementara waktu. Silakan pesan langsung di tempat.
+        </p>
+        <Link
+          to="/order"
+          className="bg-coffee-600 text-white px-8 py-3 rounded-full font-bold hover:bg-coffee-700 transition"
+        >
+          Pesan Online
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12 grid md:grid-cols-2 gap-8">
@@ -122,9 +155,17 @@ export default function Booking() {
 
       {/* KANAN: FORM BOOKING & KERANJANG */}
       <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-coffee-500 h-fit sticky top-24">
-        <h1 className="text-2xl font-bold text-coffee-900 mb-4 text-center">
+        <h1 className="text-2xl font-bold text-coffee-900 mb-2 text-center">
           Form Booking
         </h1>
+
+        {/* Info Batas Waktu */}
+        {bookingInfo && (
+          <div className="bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs text-blue-800 mb-4 text-center">
+            ⏱️ Batas waktu booking:{" "}
+            <strong>{bookingInfo.timeLimit} menit</strong>.
+          </div>
+        )}
 
         {cart.length > 0 && (
           <div className="mb-6 bg-gray-50 p-3 rounded-lg">
@@ -172,10 +213,14 @@ export default function Booking() {
                 <option
                   key={t.id}
                   value={t.table_number}
-                  disabled={t.status !== "available"}
+                  disabled={t.status !== "available" || !t.is_bookable}
                 >
                   Meja {t.table_number}{" "}
-                  {t.status !== "available" ? "(Sudah Dibooking)" : ""}
+                  {t.status !== "available"
+                    ? "(Sudah Dibooking)"
+                    : !t.is_bookable
+                      ? "(Tidak Bisa Booking)"
+                      : ""}
                 </option>
               ))}
             </select>

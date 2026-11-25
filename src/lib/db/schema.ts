@@ -78,14 +78,15 @@ export const settings = sqliteTable("settings", {
 });
 
 //---
-
 export const tables = sqliteTable("tables", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   tableNumber: text("table_number").notNull().unique(),
   status: text("status", { enum: ["available", "occupied", "booked"] })
     .default("available")
     .notNull(),
-  bookingPrice: integer("booking_price").default(0).notNull(), // <-- TAMBAHKAN INI
+  bookingPrice: integer("booking_price").default(0).notNull(),
+  isBookable: integer("is_bookable", { mode: "boolean" })
+    .default(true)
+    .notNull(), // <-- TAMBAHKAN
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
-

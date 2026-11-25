@@ -2,6 +2,18 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
   context,
 ) => {
   try {
+    // 1. CEK APAKAH FITUR BOOKING AKTIF
+    const isEnabled = await context.env.DB.prepare(
+      "SELECT value FROM settings WHERE key = 'is_booking_enabled'",
+    ).first<any>();
+
+    if (isEnabled?.value === "0") {
+      return Response.json(
+        { error: "Fitur booking sedang dinonaktifkan oleh pemilik." },
+        { status: 403 },
+      );
+    }
+
     const body: any = await context.request.json();
     const now = Math.floor(Date.now() / 1000);
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -9,15 +21,23 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       .toString()
       .padStart(3, "0")}`;
 
-    // 1. Ambil harga DP meja
+    // 2. CEK APAKAH MEJA INI BOLEH DIBOOKING
     const table = await context.env.DB.prepare(
-      "SELECT booking_price FROM tables WHERE table_number = ?",
+      "SELECT booking_price, is_bookable FROM tables WHERE table_number = ?",
     )
       .bind(body.tableNumber)
       .first<any>();
+
+    if (!table || table.is_bookable === 0) {
+      return Response.json(
+        { error: "Meja ini tidak tersedia untuk booking." },
+        { status: 400 },
+      );
+    }
+
     const dpAmount = table?.booking_price || 0;
 
-    // 2. Hitung total harga menu (jika ada)
+    // 3. Hitung total harga menu (jika ada)
     let menuSubtotal = 0;
     let menuMap = new Map();
 
@@ -40,10 +60,10 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       }
     }
 
-    // 3. Total akhir = DP Meja + Total Menu
+    // 4. Total akhir = DP Meja + Total Menu
     const totalAmount = dpAmount + menuSubtotal;
 
-    // 4. Insert ke tabel orders
+    // 5. Insert ke tabel orders
     const insert = await context.env.DB.prepare(
       `
       INSERT INTO orders (order_number, order_type, table_number, customer_name, customer_phone, status, total_amount, payment_method, created_at, updated_at)
@@ -63,7 +83,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
 
     if (!insert.success) throw new Error("Gagal membuat booking");
 
-    // 5. Ambil ID order yang baru dibuat
+    // 6. Ambil ID order yang baru dibuat
     const getOrder = await context.env.DB.prepare(
       "SELECT id FROM orders WHERE order_number = ?",
     )
@@ -71,7 +91,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       .first<any>();
     const orderId = getOrder.id;
 
-    // 6. Insert item menu (jika ada)
+    // 7. Insert item menu (jika ada)
     if (body.items && body.items.length > 0) {
       const itemStatements = [];
       for (const item of body.items) {
@@ -95,7 +115,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       await context.env.DB.batch(itemStatements);
     }
 
-    // 7. Ubah status meja jadi 'booked'
+    // 8. Ubah status meja jadi 'booked'
     await context.env.DB.prepare(
       "UPDATE tables SET status = 'booked' WHERE table_number = ?",
     )
