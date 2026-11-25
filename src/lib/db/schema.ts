@@ -36,7 +36,7 @@ export const orders = sqliteTable("orders", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   orderNumber: text("order_number").notNull().unique(), // KOPI-20241122-001
   orderType: text("order_type", {
-    enum: ["dine_in", "take_away", "online"],
+    enum: ["dine_in", "take_away", "online", "booking"],
   }).notNull(),
   tableNumber: text("table_number"), // nullable
   customerName: text("customer_name"),

@@ -1,46 +1,67 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+interface BookingTable {
+  id: number;
+  table_number: string;
+  is_bookable: number | boolean;
+}
+
 export default function BookingSettings() {
   const [isEnabled, setIsEnabled] = useState(true);
   const [timeLimit, setTimeLimit] = useState(60);
   const [warningMinutes, setWarningMinutes] = useState(15);
-  const [tables, setTables] = useState<any[]>([]);
+  const [tables, setTables] = useState<BookingTable[]>([]);
   const [message, setMessage] = useState("");
   const [isSavingToggle, setIsSavingToggle] = useState(false);
+  const [isSavingTime, setIsSavingTime] = useState(false);
+  const [updatingTableId, setUpdatingTableId] = useState<number | null>(null);
 
-  const fetchData = () => {
+  const fetchData = async () => {
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/booking/status"
       : "/api/booking/status";
-    fetch(apiUrl)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.isEnabled !== undefined) {
-          setIsEnabled(data.isEnabled);
-          setTimeLimit(data.timeLimit);
-          setWarningMinutes(data.warningMinutes);
-        }
-      });
 
     const apiTables = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/admin/tables"
       : "/api/admin/tables";
-    fetch(apiTables)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.data) setTables(data.data);
-      });
+
+    try {
+      const [statusRes, tablesRes] = await Promise.all([
+        fetch(apiUrl),
+        fetch(apiTables),
+      ]);
+
+      if (!statusRes.ok || !tablesRes.ok) {
+        setMessage("Gagal memuat pengaturan booking.");
+        return;
+      }
+
+      const [statusData, tablesData] = await Promise.all([
+        statusRes.json(),
+        tablesRes.json(),
+      ]);
+
+      if (statusData.isEnabled !== undefined) {
+        setIsEnabled(statusData.isEnabled);
+        setTimeLimit(statusData.timeLimit);
+        setWarningMinutes(statusData.warningMinutes);
+      }
+
+      if (Array.isArray(tablesData.data)) setTables(tablesData.data);
+    } catch {
+      setMessage("Terjadi kesalahan saat memuat pengaturan.");
+    }
   };
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, []);
 
   // Fungsi Toggle Utama (Simpan Otomatis)
   const toggleMainStatus = async () => {
     const newValue = !isEnabled;
-    setIsEnabled(newValue); // Ubah UI dulu agar responsif
+    setIsEnabled(newValue);
     setIsSavingToggle(true);
     setMessage("");
 
@@ -54,16 +75,17 @@ export default function BookingSettings() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_booking_enabled: newValue ? "1" : "0" }),
       });
+      const data = await res.json().catch(() => null);
 
       if (res.ok) {
         setMessage(
           newValue ? "Fitur booking diaktifkan." : "Fitur booking dimatikan.",
         );
       } else {
-        setIsEnabled(!newValue); // Kembalikan jika gagal
-        setMessage("Gagal menyimpan pengaturan.");
+        setIsEnabled(!newValue);
+        setMessage(data?.error || "Gagal menyimpan pengaturan.");
       }
-    } catch (error) {
+    } catch {
       setIsEnabled(!newValue);
       setMessage("Terjadi kesalahan jaringan.");
     } finally {
@@ -74,35 +96,80 @@ export default function BookingSettings() {
   // Fungsi Simpan Batas Waktu
   const saveTimeSettings = async () => {
     setMessage("");
+
+    if (!Number.isInteger(timeLimit) || timeLimit < 1) {
+      setMessage("Batas waktu harus berupa angka positif.");
+      return;
+    }
+    if (!Number.isInteger(warningMinutes) || warningMinutes < 0) {
+      setMessage("Waktu peringatan tidak boleh negatif.");
+      return;
+    }
+    if (warningMinutes >= timeLimit) {
+      setMessage("Waktu peringatan harus lebih kecil dari batas waktu booking.");
+      return;
+    }
+
+    setIsSavingTime(true);
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
       : "/api/settings";
-    const res = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        booking_time_limit: timeLimit.toString(),
-        booking_warning_minutes: warningMinutes.toString(),
-      }),
-    });
-    if (res.ok) setMessage("Batas waktu berhasil disimpan!");
-    else setMessage("Gagal menyimpan batas waktu.");
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          booking_time_limit: timeLimit.toString(),
+          booking_warning_minutes: warningMinutes.toString(),
+        }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (res.ok) setMessage("Batas waktu berhasil disimpan!");
+      else setMessage(data?.error || "Gagal menyimpan batas waktu.");
+    } catch {
+      setMessage("Terjadi kesalahan jaringan.");
+    } finally {
+      setIsSavingTime(false);
+    }
   };
 
   // Fungsi Toggle Meja
-  const toggleTableBookable = async (id: number, currentStatus: any) => {
+  const toggleTableBookable = async (
+    id: number,
+    currentStatus: number | boolean,
+  ) => {
     const isCurrentlyBookable = Number(currentStatus) === 1;
     const newStatus = !isCurrentlyBookable;
+
+    setUpdatingTableId(id);
+    setMessage("");
 
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/admin/tables"
       : "/api/admin/tables";
-    await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, is_bookable: newStatus }),
-    });
-    fetchData(); // Refresh data dari database
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, is_bookable: newStatus }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        setMessage(data?.error || "Gagal mengubah status meja.");
+        return;
+      }
+
+      await fetchData();
+      setMessage("Status meja berhasil diperbarui.");
+    } catch {
+      setMessage("Terjadi kesalahan saat mengubah status meja.");
+    } finally {
+      setUpdatingTableId(null);
+    }
   };
 
   return (
@@ -178,9 +245,10 @@ export default function BookingSettings() {
 
           <button
             onClick={saveTimeSettings}
+            disabled={isSavingTime}
             className="bg-coffee-600 text-white px-6 py-2 rounded font-bold hover:bg-coffee-700"
           >
-            Simpan Batas Waktu
+            {isSavingTime ? "Menyimpan..." : "Simpan Batas Waktu"}
           </button>
         </div>
       </div>
@@ -201,9 +269,10 @@ export default function BookingSettings() {
               </span>
               <button
                 onClick={() => toggleTableBookable(table.id, table.is_bookable)}
-                className={`text-xs px-3 py-1 rounded font-bold ${Number(table.is_bookable) === 1 ? "bg-green-200 text-green-800" : "bg-gray-300 text-gray-600"}`}
+                disabled={updatingTableId === table.id}
+                className={`text-xs px-3 py-1 rounded font-bold ${Number(table.is_bookable) === 1 ? "bg-green-200 text-green-800" : "bg-gray-300 text-gray-600"} ${updatingTableId === table.id ? "opacity-50" : ""}`}
               >
-                {Number(table.is_bookable) === 1 ? "Aktif" : "Mati"}
+                {updatingTableId === table.id ? "Mengubah..." : (Number(table.is_bookable) === 1 ? "Aktif" : "Mati")}
               </button>
             </div>
           ))}

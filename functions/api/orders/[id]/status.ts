@@ -22,7 +22,7 @@ export const onRequestPatch: PagesFunction<{ DB: D1Database }> = async (
     // Jika selesai/batal, kosongkan meja
     if (
       (newStatus === "completed" || newStatus === "cancelled") &&
-      order.order_type === "dine_in" &&
+      (order.order_type === "dine_in" || order.order_type === "booking") &&
       order.table_number
     ) {
       await context.env.DB.prepare(
