@@ -42,7 +42,7 @@ export default function BookingSettings() {
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/settings"
       : "/api/settings";
-    await fetch(apiUrl, {
+    const res = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -51,7 +51,9 @@ export default function BookingSettings() {
         booking_warning_minutes: warningMinutes.toString(),
       }),
     });
-    setMessage("Pengaturan booking berhasil disimpan!");
+
+    if (res.ok) setMessage("Pengaturan booking berhasil disimpan!");
+    else setMessage("Gagal menyimpan pengaturan.");
   };
 
   const toggleTableBookable = async (id: number, currentStatus: boolean) => {
@@ -63,7 +65,7 @@ export default function BookingSettings() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, is_bookable: !currentStatus }),
     });
-    fetchData();
+    fetchData(); // Refresh data
   };
 
   return (
