@@ -26,7 +26,7 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
-      // Di bagian header AdminDashboard
+      
       <div className="flex justify-between items-center mb-8 border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold text-coffee-900">
