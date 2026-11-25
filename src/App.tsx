@@ -20,24 +20,30 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rute Publik (dengan Navbar) */}
+        {/* =========================================
+            RUTE PUBLIK (Dengan Navbar & Footer)
+        ========================================= */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/menu" element={<Menu />} />
-
-          {/* PASTIKAN DUA RUTE DI BAWAH INI URUTANNYA SEPERTI INI */}
           <Route path="/order" element={<Order />} />
           <Route
             path="/order/success/:orderNumber"
             element={<OrderSuccess />}
           />
         </Route>
+
+        {/* Booking (Tanpa Navbar/Footer) */}
         <Route path="/booking" element={<Booking />} />
 
-        {/* Auth */}
+        {/* =========================================
+            RUTE AUTH
+        ========================================= */}
         <Route path="/login" element={<Login />} />
 
-        {/* Rute Kasir (Proteksi) */}
+        {/* =========================================
+            RUTE KASIR (POS) - Wajib Login
+        ========================================= */}
         <Route
           path="/pos"
           element={
@@ -46,16 +52,18 @@ export default function App() {
             </RequireAuth>
           }
         />
-
-        {/* Rute Admin/Owner (Proteksi) */}
         <Route
-          path="/admin/menu"
+          path="/pos/history"
           element={
             <RequireAuth>
-              <MenuManager />
+              <OrderHistory />
             </RequireAuth>
           }
         />
+
+        {/* =========================================
+            RUTE ADMIN/OWNER - Wajib Login
+        ========================================= */}
         <Route
           path="/admin"
           element={
@@ -65,18 +73,18 @@ export default function App() {
           }
         />
         <Route
-          path="/admin/profile"
+          path="/admin/menu"
           element={
             <RequireAuth>
-              <StoreProfile />
+              <MenuManager />
             </RequireAuth>
           }
         />
         <Route
-          path="/pos/history"
+          path="/admin/profile"
           element={
             <RequireAuth>
-              <OrderHistory />
+              <StoreProfile />
             </RequireAuth>
           }
         />
@@ -96,15 +104,16 @@ export default function App() {
             </RequireAuth>
           }
         />
+        {/* RUTE BARU: Manajemen Akun Kasir */}
+        <Route
+          path="/admin/users"
+          element={
+            <RequireAuth>
+              <UserManager />
+            </RequireAuth>
+          }
+        />
       </Routes>
-      <Route
-        path="/admin/users"
-        element={
-          <RequireAuth>
-            <UserManager />
-          </RequireAuth>
-        }
-      />
     </BrowserRouter>
   );
 }
