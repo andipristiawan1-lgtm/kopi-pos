@@ -12,15 +12,25 @@ type MenuItem = {
 export default function Home() {
   const [featuredMenus, setFeaturedMenus] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroImages, setHeroImages] = useState<string[]>([
+    "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2000&auto=format&fit=crop",
+  ]);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [storeName, setStoreName] = useState("Warung Kopi");
+  const [menuFallbackImage, setMenuFallbackImage] = useState(
+    "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=500&auto=format&fit=crop",
+  );
 
   useEffect(() => {
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/menu"
       : "/api/menu";
     fetch(apiUrl)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("Gagal memuat menu");
+        return res.json();
+      })
       .then((data) => {
-        // Pastikan data.data itu array sebelum disimpan
         if (data && Array.isArray(data.data)) {
           setFeaturedMenus(data.data.slice(0, 6));
         }
@@ -30,16 +40,55 @@ export default function Home() {
         console.error(err);
         setLoading(false);
       });
+
+    const settingsUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/settings"
+      : "/api/settings";
+    fetch(settingsUrl)
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (!data?.data) return;
+        const configured = [
+          data.data.hero_image_1,
+          data.data.hero_image_2,
+          data.data.hero_image_3,
+        ].filter((url: unknown): url is string =>
+          typeof url === "string" && url.trim().length > 0
+        );
+        setHeroImages(configured.length > 0 ? configured : [
+          "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2000&auto=format&fit=crop",
+        ]);
+        if (data.data.store_name) setStoreName(data.data.store_name);
+        if (data.data.menu_fallback_image_url) {
+          setMenuFallbackImage(data.data.menu_fallback_image_url);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (heroImages.length < 2) return;
+    const timer = window.setInterval(() => {
+      setHeroIndex((current) => (current + 1) % heroImages.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [heroImages]);
 
   return (
     <div className="flex flex-col">
       {/* HERO SECTION */}
-      <section className="relative bg-coffee-900 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center"></div>
-        <div className="relative max-w-6xl mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center z-10">
+      <section className="relative bg-coffee-900 text-white overflow-hidden min-h-[520px] flex items-center">
+        {heroImages.map((imageUrl, index) => (
+          <div
+            key={imageUrl}
+            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${index === heroIndex ? "opacity-100" : "opacity-0"}`}
+            style={{ backgroundImage: `url('${imageUrl}')` }}
+          />
+        ))}
+        <div className="absolute inset-0 bg-coffee-900/75" />
+        <div className="relative max-w-6xl mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center z-10 w-full">
           <span className="bg-coffee-500/30 text-coffee-100 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 backdrop-blur-sm border border-coffee-500/50">
-            Selamat Datang di Warung Kopi
+            Selamat Datang di {storeName}
           </span>
           <h1 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
             Nikmati Kopi Terbaik,
@@ -64,6 +113,19 @@ export default function Home() {
               Booking Meja (DP)
             </Link>
           </div>
+          {heroImages.length > 1 && (
+            <div className="flex gap-2 mt-8" aria-label="Pilihan gambar hero">
+              {heroImages.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  aria-label={`Tampilkan gambar hero ${index + 1}`}
+                  onClick={() => setHeroIndex(index)}
+                  className={`h-2.5 rounded-full transition-all ${index === heroIndex ? "w-8 bg-white" : "w-2.5 bg-white/50"}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -105,10 +167,7 @@ export default function Home() {
                 >
                   <div className="h-48 overflow-hidden relative bg-gray-100">
                     <img
-                      src={
-                        item.imageUrl ||
-                        "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=500&auto=format&fit=crop"
-                      }
+                      src={item.imageUrl || menuFallbackImage}
                       alt={item.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />

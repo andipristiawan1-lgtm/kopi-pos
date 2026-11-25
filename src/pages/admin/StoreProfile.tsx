@@ -3,7 +3,16 @@ import { Link } from "react-router-dom";
 
 export default function StoreProfile() {
   const [formData, setFormData] = useState({
+    store_name: "",
+    store_address: "",
+    store_hours: "",
     wa_admin: "",
+    logo_url: "",
+    hero_image_1: "",
+    hero_image_2: "",
+    hero_image_3: "",
+    footer_image_url: "",
+    menu_fallback_image_url: "",
     bank_name: "",
     bank_account: "",
     bank_owner: "",
@@ -75,19 +84,77 @@ export default function StoreProfile() {
         )}
 
         <form onSubmit={handleSave} className="space-y-6">
-          {/* KONTAK */}
+          {/* PROFIL TOKO */}
           <div className="border-b pb-4">
-            <h2 className="font-bold text-lg mb-4 text-coffee-800">Kontak</h2>
-            <label className="block text-sm font-medium mb-1">
-              Nomor WhatsApp Admin (Gunakan 62...)
-            </label>
-            <input
-              type="text"
-              name="wa_admin"
-              value={formData.wa_admin}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-            />
+            <h2 className="font-bold text-lg mb-4 text-coffee-800">Profil Toko</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm mb-1">Nama Toko</label>
+                <input
+                  type="text"
+                  name="store_name"
+                  value={formData.store_name}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                  placeholder="Warung Kopi"
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Jam Buka</label>
+                <input
+                  type="text"
+                  name="store_hours"
+                  value={formData.store_hours}
+                  onChange={handleChange}
+                  className="w-full border p-2 rounded"
+                  placeholder="08.00 - 22.00"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm mb-1">Alamat Toko</label>
+              <input
+                type="text"
+                name="store_address"
+                value={formData.store_address}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                placeholder="Jl. Contoh No. 123"
+              />
+            </div>
+          </div>
+
+          {/* GAMBAR WEBSITE */}
+          <div className="border-b pb-4">
+            <h2 className="font-bold text-lg mb-4 text-coffee-800">Gambar Website</h2>
+            <p className="text-xs text-gray-500 mb-3">
+              Masukkan tautan langsung gambar dari Imgur, Blogger, Google Drive, atau hosting lain. Gunakan gambar berformat JPG, PNG, atau WebP.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/*
+                ["logo_url", "URL Logo Navbar"],
+                ["hero_image_1", "URL Gambar Hero 1"],
+                ["hero_image_2", "URL Gambar Hero 2"],
+                ["hero_image_3", "URL Gambar Hero 3"],
+                ["footer_image_url", "URL Gambar/Footer"],
+                ["menu_fallback_image_url", "URL Gambar Menu Default"],
+              */}
+              {["logo_url", "hero_image_1", "hero_image_2", "hero_image_3", "footer_image_url", "menu_fallback_image_url"].map((name, index) => (
+                <div key={index}>
+                  <label className="block text-sm mb-1">
+                    {name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </label>
+                  <input
+                    type="url"
+                    name={name}
+                    value={formData[name as keyof typeof formData]}
+                    onChange={handleChange}
+                    className="w-full border p-2 rounded"
+                    placeholder="https://..."
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* TRANSFER BANK */}

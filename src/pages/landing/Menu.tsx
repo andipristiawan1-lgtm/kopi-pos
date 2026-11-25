@@ -15,11 +15,18 @@ export default function Menu() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState("Semua");
+  const [fallbackImage, setFallbackImage] = useState(
+    "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=500&auto=format&fit=crop",
+  );
 
   useEffect(() => {
     const apiUrl = import.meta.env.DEV
       ? "http://127.0.0.1:8788/api/menu"
       : "/api/menu";
+    const settingsUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/settings"
+      : "/api/settings";
+
     fetch(apiUrl)
       .then((res) => {
         if (!res.ok) throw new Error("Gagal memuat menu");
@@ -33,6 +40,15 @@ export default function Menu() {
         setError(err.message);
         setLoading(false);
       });
+
+    fetch(settingsUrl)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.data?.menu_fallback_image_url) {
+          setFallbackImage(data.data.menu_fallback_image_url);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   if (loading) {
@@ -105,8 +121,7 @@ export default function Menu() {
             <div className="h-48 bg-coffee-100 relative overflow-hidden">
               <img
                 src={
-                  item.imageUrl ||
-                  "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=500&auto=format&fit=crop"
+                  item.imageUrl || fallbackImage
                 }
                 alt={item.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

@@ -1,9 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 
 export default function PublicLayout() {
   const [isOpen, setIsOpen] = useState(false);
+  const [storeName, setStoreName] = useState("Warung Kopi");
+  const [storeAddress, setStoreAddress] = useState(
+    "Jl. Kopi Nikmat No. 123, Kota Anda"
+  );
+  const [storeHours, setStoreHours] = useState("08.00 - 22.00");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [footerImageUrl, setFooterImageUrl] = useState("");
   const location = useLocation();
+
+  useEffect(() => {
+    const apiUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/settings"
+      : "/api/settings";
+
+    fetch(apiUrl)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const settings = data?.data;
+        if (!settings) return;
+        if (settings.store_name) setStoreName(settings.store_name);
+        if (settings.store_address) setStoreAddress(settings.store_address);
+        if (settings.store_hours) setStoreHours(settings.store_hours);
+        setLogoUrl(settings.logo_url || "");
+        setFooterImageUrl(settings.footer_image_url || "");
+      })
+      .catch(() => {});
+  }, []);
 
   // Fungsi untuk menutup menu saat link diklik
   const closeMenu = () => setIsOpen(false);
@@ -26,7 +52,16 @@ export default function PublicLayout() {
             onClick={closeMenu}
             className="text-xl md:text-2xl font-bold text-coffee-700 flex items-center gap-2"
           >
-            ☕ Warung Kopi
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={storeName}
+                className="h-9 w-9 rounded-full object-cover"
+              />
+            ) : (
+              <span>☕</span>
+            )}
+            <span>{storeName}</span>
           </Link>
 
           {/* Menu Desktop */}
@@ -118,17 +153,19 @@ export default function PublicLayout() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-coffee-900 text-coffee-100 py-8 mt-auto">
-        <div className="max-w-6xl mx-auto px-4 text-center space-y-2">
-          <p className="text-lg font-bold text-white mb-2">☕ Warung Kopi</p>
-          <p className="text-sm text-coffee-300">
-            Jl. Kopi Nikmat No. 123, Kota Anda
-          </p>
-          <p className="text-sm text-coffee-300">
-            Buka Setiap Hari: 08.00 - 22.00
-          </p>
+      <footer className="relative bg-coffee-900 text-coffee-100 py-8 mt-auto overflow-hidden">
+        {footerImageUrl && (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-[0.15]"
+            style={{ backgroundImage: `url('${footerImageUrl}')` }}
+          />
+        )}
+        <div className="relative max-w-6xl mx-auto px-4 text-center space-y-2">
+          <p className="text-lg font-bold text-white mb-2">{storeName}</p>
+          <p className="text-sm text-coffee-300">{storeAddress}</p>
+          <p className="text-sm text-coffee-300">Buka Setiap Hari: {storeHours}</p>
           <div className="pt-4 mt-4 border-t border-coffee-800 text-xs text-coffee-400">
-            © {new Date().getFullYear()} Warung Kopi. Dibuat dengan ❤️.
+            © {new Date().getFullYear()} {storeName}. Dibuat dengan ❤️.
           </div>
         </div>
       </footer>
