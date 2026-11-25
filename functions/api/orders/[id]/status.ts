@@ -13,6 +13,14 @@ export const onRequestPatch: PagesFunction<{ DB: D1Database }> = async (
       .bind(id)
       .first<any>();
 
+    if (!order) {
+      return Response.json({ error: "Pesanan tidak ditemukan" }, { status: 404 });
+    }
+
+    if (!["pending", "preparing", "ready", "completed", "cancelled"].includes(newStatus)) {
+      return Response.json({ error: "Status pesanan tidak valid" }, { status: 400 });
+    }
+
     await context.env.DB.prepare(
       "UPDATE orders SET status = ?, updated_at = ? WHERE id = ?",
     )

@@ -2,6 +2,18 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
   context,
 ) => {
   try {
+    let isStaff = false;
+    const cookie = context.request.headers.get("Cookie");
+    const match = cookie?.match(/session_token=([^;]+)/);
+    if (match) {
+      const session = await context.env.DB.prepare(
+        "SELECT u.role FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = ?",
+      )
+        .bind(match[1])
+        .first<{ role: string }>();
+      isStaff = session?.role === "owner" || session?.role === "cashier";
+    }
+
     const body: any = await context.request.json();
 
     if (!body.items || body.items.length === 0) {
@@ -53,13 +65,32 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
     // 3. Cek meja aktif (jika dine_in)
     let existingOrder = null;
     if (body.orderType === "dine_in" && body.tableNumber) {
-      existingOrder = await context.env.DB.prepare(
-        `
-        SELECT id, order_number FROM orders WHERE table_number = ? AND order_type = 'dine_in' AND status IN ('pending', 'preparing') LIMIT 1
-      `, // <-- PASTIKAN order_number IKUT DI-SELECT
+      const table = await context.env.DB.prepare(
+        "SELECT status FROM tables WHERE table_number = ?",
       )
         .bind(body.tableNumber)
-        .first<any>();
+        .first<{ status: string }>();
+
+      if (!table) {
+        return Response.json({ error: "Meja tidak ditemukan" }, { status: 400 });
+      }
+
+      if (!isStaff && table.status !== "available") {
+        return Response.json(
+          { error: `Meja ${body.tableNumber} sedang digunakan atau dibooking` },
+          { status: 409 },
+        );
+      }
+
+      if (isStaff) {
+        existingOrder = await context.env.DB.prepare(
+          `SELECT id, order_number FROM orders
+           WHERE table_number = ? AND order_type = 'dine_in'
+           AND status IN ('pending', 'preparing', 'ready') LIMIT 1`,
+        )
+          .bind(body.tableNumber)
+          .first<any>();
+      }
     }
 
     let orderId = 0;

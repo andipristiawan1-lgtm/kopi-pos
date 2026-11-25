@@ -199,8 +199,13 @@ export default function Order() {
               >
                 <option value="">-- Pilih Meja yang Tersedia --</option>
                 {availableTables.map((table) => (
-                  <option key={table.id} value={table.table_number}>
+                  <option
+                    key={table.id}
+                    value={table.table_number}
+                    disabled={table.status !== "available"}
+                  >
                     Meja {table.table_number}
+                    {table.status !== "available" ? " (Tidak Tersedia)" : ""}
                   </option>
                 ))}
               </select>
