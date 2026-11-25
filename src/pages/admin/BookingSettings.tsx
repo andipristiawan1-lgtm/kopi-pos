@@ -56,17 +56,23 @@ export default function BookingSettings() {
     else setMessage("Gagal menyimpan pengaturan.");
   };
 
-  const toggleTableBookable = async (id: number, currentStatus: boolean) => {
-    const apiUrl = import.meta.env.DEV
-      ? "http://127.0.0.1:8788/api/admin/tables"
-      : "/api/admin/tables";
-    await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, is_bookable: !currentStatus }),
-    });
-    fetchData(); // Refresh data
-  };
+    const toggleTableBookable = async (id: number, currentStatus: any) => {
+      // Paksa baca status sebagai number (0 atau 1)
+      const isCurrentlyBookable = Number(currentStatus) === 1;
+      const newStatus = !isCurrentlyBookable; // Balik nilainya
+
+      const apiUrl = import.meta.env.DEV
+        ? "http://127.0.0.1:8788/api/admin/tables"
+        : "/api/admin/tables";
+
+      await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, is_bookable: newStatus }),
+      });
+
+      fetchData(); // Refresh data dari database
+    };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
