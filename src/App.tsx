@@ -14,6 +14,7 @@ import OrderHistory from "./pages/pos/OrderHistory";
 import TableManager from "./pages/admin/TableManager";
 import Booking from "./pages/landing/Booking";
 import BookingSettings from "./pages/admin/BookingSettings";
+import UserManager from "./pages/admin/UserManager";
 
 export default function App() {
   return (
@@ -96,6 +97,14 @@ export default function App() {
           }
         />
       </Routes>
+      <Route
+        path="/admin/users"
+        element={
+          <RequireAuth>
+            <UserManager />
+          </RequireAuth>
+        }
+      />
     </BrowserRouter>
   );
 }

@@ -89,6 +89,12 @@ export default function PosDashboard() {
             Live Antrean
           </div>
           <Link
+            to="/admin"
+            className="text-sm bg-coffee-50 text-coffee-700 px-4 py-1.5 rounded-full font-bold hover:bg-coffee-100 transition border border-coffee-200"
+          >
+            Admin
+          </Link>
+          <Link
             to="/pos/history"
             className="text-sm bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full font-bold hover:bg-blue-100 transition border border-blue-200"
           >

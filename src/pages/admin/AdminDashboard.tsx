@@ -26,6 +26,7 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
+      // Di bagian header AdminDashboard
       <div className="flex justify-between items-center mb-8 border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold text-coffee-900">
@@ -33,14 +34,21 @@ export default function AdminDashboard() {
           </h1>
           <p className="text-gray-500">Ringkasan performa warung hari ini.</p>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-sm text-red-500 hover:text-red-700 font-medium underline"
-        >
-          Logout
-        </button>
+        <div className="flex items-center gap-4">
+          <Link
+            to="/"
+            className="text-sm bg-gray-100 text-gray-700 px-4 py-1.5 rounded-full font-bold hover:bg-gray-200 transition"
+          >
+            Lihat Toko
+          </Link>
+          <button
+            onClick={handleLogout}
+            className="text-sm text-red-500 hover:text-red-700 font-medium underline"
+          >
+            Logout
+          </button>
+        </div>
       </div>
-
       {/* Kartu Statistik */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
@@ -57,7 +65,6 @@ export default function AdminDashboard() {
           </h2>
         </div>
       </div>
-
       {/* Menu Navigasi Cepat */}
       <h2 className="text-xl font-bold text-coffee-900 mb-4">Menu Cepat</h2>
       <div className="grid md:grid-cols-3 gap-4">
@@ -101,6 +108,17 @@ export default function AdminDashboard() {
           <div>
             <h3 className="font-bold text-coffee-900">Buka Kasir (POS)</h3>
             <p className="text-xs text-gray-500">Lihat antrean & pesanan</p>
+          </div>
+        </Link>
+        {/* TAMBAHKAN LINK MANAJEMEN KASIR INI */}
+        <Link
+          to="/admin/users"
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
+        >
+          <div className="bg-coffee-100 p-3 rounded-full text-2xl">👥</div>
+          <div>
+            <h3 className="font-bold text-coffee-900">Manajemen Kasir</h3>
+            <p className="text-xs text-gray-500">Tambah & hapus akun kasir</p>
           </div>
         </Link>
 
