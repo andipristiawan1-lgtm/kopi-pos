@@ -122,7 +122,7 @@ export default function MenuManager() {
          <Link to="/admin" className="text-coffee-600 hover:underline text-sm mb-6 block">← Kembali ke Dashboard</Link>
              
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-coffee-900">Manajemen Menu</h1>
+        <h1 className="text-3xl font-bold text-coffee-900">Manajemen Menu </h1>
         <button
           onClick={() => {
             setEditingItem(null);
