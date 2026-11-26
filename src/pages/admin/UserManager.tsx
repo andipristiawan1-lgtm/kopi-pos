@@ -142,6 +142,7 @@ export default function UserManager() {
           <button
             type="submit"
             className="bg-coffee-600 text-white py-2 rounded font-bold text-sm hover:bg-coffee-700"
+           style={{ backgroundColor: "#4e342e" }} 
           >
             Tambah Kasir
           </button>
