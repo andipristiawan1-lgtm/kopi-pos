@@ -71,9 +71,13 @@ export default function CategoryManager() {
             className="flex-1 border border-gray-300 rounded-lg p-2 text-sm"
             required
           />
-          <button type="submit" className="bg-coffee-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-coffee-700">
-            Tambah
-          </button>
+          <button 
+  type="submit" 
+  className="text-white px-6 py-2 rounded-lg font-bold text-sm transition hover:opacity-90 shadow-md"
+  style={{ backgroundColor: "#4e342e" }} // <-- Warna cokelat tua paksa
+>
+  Tambah
+</button>
         </form>
 
         <div className="space-y-2">
