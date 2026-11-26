@@ -19,6 +19,7 @@ import InventoryManager from "./pages/admin/InventoryManager";
 import KitchenDisplay from "./pages/pos/KitchenDisplay";
 import PaymentLogs from "./pages/admin/PaymentLogs";
 import CustomerOrderHistory from "./pages/landing/CustomerOrderHistory";
+import CategoryManager from "./pages/admin/CategoryManager"; // <-- Tambahkan ini
 
 export default function App() {
   return (
@@ -115,6 +116,7 @@ export default function App() {
             </RequireAuth>
           }
         />
+        
         <Route
           path="/admin/booking"
           element={
@@ -140,6 +142,14 @@ export default function App() {
             </RequireAuth>
           }
         />
+        <Route 
+  path="/admin/categories" 
+  element={
+    <RequireAuth>
+      <CategoryManager />
+    </RequireAuth>
+  } 
+/>
         <Route
           path="/admin/payment-logs"
           element={
@@ -147,6 +157,7 @@ export default function App() {
               <PaymentLogs />
             </RequireAuth>
           }
+          
         />
       </Routes>
     </BrowserRouter>
