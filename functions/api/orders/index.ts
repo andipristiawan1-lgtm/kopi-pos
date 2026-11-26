@@ -119,26 +119,25 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
         .run();
     } else {
       // SKENARIO B: BUAT TAGIHAN BARU
-      const insertOrder = await context.env.DB.prepare(
-        `
-        INSERT INTO orders (order_number, order_type, table_number, customer_name, customer_phone, status, total_amount, payment_method, unique_code, is_paid, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
-      `,
-      )
-        .bind(
-          orderNumber,
-          body.orderType,
-          body.tableNumber || null,
-          body.customerName || "Pelanggan",
-          customerPhone,
-          totalAmount,
-          paymentMethod,
-          uniqueCode,
-          body.isPaid === true ? 1 : 0,
-          now,
-          now,
+           // Buat tagihan baru
+      const insertOrder = await context.env.DB.prepare(`
+        INSERT INTO orders (
+          order_number, order_type, table_number, customer_name, customer_phone, 
+          status, total_amount, payment_method, unique_code, created_at, updated_at
         )
-        .run();
+        VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?)
+      `).bind(
+        orderNumber,           // 1. order_number
+        body.orderType,        // 2. order_type
+        body.tableNumber || null, // 3. table_number
+        body.customerName || "Pelanggan", // 4. customer_name
+        body.customerPhone || null,       // 5. customer_phone
+        totalAmount,           // 6. total_amount
+        paymentMethod,         // 7. payment_method
+        uniqueCode,            // 8. unique_code
+        now,                   // 9. created_at
+        now                    // 10. updated_at
+      ).run();
 
       if (!insertOrder.success) throw new Error("Gagal insert order");
 
