@@ -140,3 +140,21 @@ export const purchaseItems = sqliteTable("purchase_items", {
   subtotal: integer("subtotal").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
+
+// ============================================
+// PAYMENT LOGS — Notifikasi pembayaran MacroDroid
+// ============================================
+export const paymentLogs = sqliteTable("payment_logs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  dedupKey: text("dedup_key").notNull().unique(),
+  sourceApp: text("source_app"),
+  appName: text("app_name"),
+  notificationTitle: text("notification_title"),
+  rawMessage: text("raw_message").notNull(),
+  extractedAmount: integer("extracted_amount"),
+  notificationTime: integer("notification_time"),
+  status: text("status").default("pending").notNull(),
+  matchedOrderId: integer("matched_order_id").references(() => orders.id, { onDelete: "set null" }),
+  receivedAt: integer("received_at").notNull(),
+  processedAt: integer("processed_at"),
+});

@@ -19,6 +19,7 @@ export default function StoreProfile() {
     ewallet_name: "",
     ewallet_number: "",
     qris_url: "",
+    payment_webhook_secret: "",
   });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -155,6 +156,23 @@ export default function StoreProfile() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* WEBHOOK PEMBAYARAN */}
+          <div className="border-b pb-4">
+            <h2 className="font-bold text-lg mb-4 text-coffee-800">Notifikasi Pembayaran Otomatis</h2>
+            <label className="block text-sm mb-1">Secret MacroDroid</label>
+            <input
+              type="text"
+              name="payment_webhook_secret"
+              value={formData.payment_webhook_secret}
+              onChange={handleChange}
+              className="w-full border p-2 rounded font-mono"
+              placeholder="Gunakan secret acak yang panjang"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              Gunakan nilai ini di URL dan query MacroDroid. Jangan bagikan kepada pihak lain.
+            </p>
           </div>
 
           {/* TRANSFER BANK */}

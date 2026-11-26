@@ -17,6 +17,7 @@ import BookingSettings from "./pages/admin/BookingSettings";
 import UserManager from "./pages/admin/UserManager";
 import InventoryManager from "./pages/admin/InventoryManager";
 import KitchenDisplay from "./pages/pos/KitchenDisplay";
+import PaymentLogs from "./pages/admin/PaymentLogs";
 
 export default function App() {
   return (
@@ -134,6 +135,14 @@ export default function App() {
           element={
             <RequireAuth>
               <InventoryManager />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/payment-logs"
+          element={
+            <RequireAuth>
+              <PaymentLogs />
             </RequireAuth>
           }
         />
