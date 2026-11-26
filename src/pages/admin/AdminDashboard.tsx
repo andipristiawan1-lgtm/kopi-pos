@@ -26,7 +26,6 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
-      
       <div className="flex justify-between items-center mb-8 border-b pb-4">
         <div>
           <h1 className="text-3xl font-bold text-coffee-900">
@@ -49,6 +48,7 @@ export default function AdminDashboard() {
           </button>
         </div>
       </div>
+
       {/* Kartu Statistik */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
@@ -65,9 +65,11 @@ export default function AdminDashboard() {
           </h2>
         </div>
       </div>
+
       {/* Menu Navigasi Cepat */}
       <h2 className="text-xl font-bold text-coffee-900 mb-4">Menu Cepat</h2>
       <div className="grid md:grid-cols-3 gap-4">
+        
         <Link
           to="/admin/profile"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
@@ -78,7 +80,20 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Atur nomor WA & info toko</p>
           </div>
         </Link>
-         <Link
+
+        {/* MANAJEMEN KATEGORI (BARU) */}
+        <Link
+          to="/admin/categories"
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
+        >
+          <div className="bg-coffee-100 p-3 rounded-full text-2xl">🏷️</div>
+          <div>
+            <h3 className="font-bold text-coffee-900">Kelola Kategori</h3>
+            <p className="text-xs text-gray-500">Atur jenis menu</p>
+          </div>
+        </Link>
+
+        <Link
           to="/pos"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
         >
@@ -88,7 +103,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Lihat antrean & pesanan</p>
           </div>
         </Link>
-        {/* Link Manajemen Meja (BARU) */}
+
         <Link
           to="/admin/tables"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
@@ -99,6 +114,7 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-500">Atur harga DP booking</p>
           </div>
         </Link>
+
         <Link
           to="/admin/booking"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
@@ -110,8 +126,6 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-       
-        {/* TAMBAHKAN LINK MANAJEMEN KASIR INI */}
         <Link
           to="/admin/users"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
@@ -145,7 +159,6 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-        {/* Link Log Pembayaran (BARU) */}
         <Link
           to="/admin/payment-logs"
           className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition flex items-center gap-4 border border-coffee-100"
@@ -157,7 +170,7 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-        {/* Placeholder untuk fitur mendatang */}
+        {/* Placeholder Laporan */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-dashed border-gray-300 flex items-center gap-4 opacity-50 cursor-not-allowed">
           <div className="bg-gray-100 p-3 rounded-full text-2xl">📊</div>
           <div>
