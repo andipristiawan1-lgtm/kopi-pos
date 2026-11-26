@@ -57,16 +57,29 @@ export default function PosDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const updateStatus = async (id: number, status: string) => {
+    const updateStatus = async (id: number, status: string) => {
     const apiUrl = import.meta.env.DEV
       ? `http://127.0.0.1:8788/api/orders/${id}/status`
       : `/api/orders/${id}/status`;
-    await fetch(apiUrl, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    fetchOrders();
+
+    try {
+      const res = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Gagal mengubah status");
+        return;
+      }
+
+      fetchOrders(); // Refresh jika berhasil
+    } catch (err) {
+      alert("Terjadi kesalahan jaringan.");
+    }
   };
 
   const markAsPaid = async (id: number) => {
