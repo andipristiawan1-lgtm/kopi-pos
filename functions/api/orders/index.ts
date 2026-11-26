@@ -16,6 +16,14 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
 
     const body: any = await context.request.json();
 
+    const customerPhone = String(body.customerPhone || "").replace(/\D/g, "");
+    if (!isStaff && (customerPhone.length < 8 || customerPhone.length > 15)) {
+      return Response.json(
+        { error: "Nomor WhatsApp wajib diisi dengan format yang benar" },
+        { status: 400 },
+      );
+    }
+
     if (!body.items || body.items.length === 0) {
       return Response.json({ error: "Keranjang kosong" }, { status: 400 });
     }
@@ -113,8 +121,8 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
       // SKENARIO B: BUAT TAGIHAN BARU
       const insertOrder = await context.env.DB.prepare(
         `
-        INSERT INTO orders (order_number, order_type, table_number, customer_name, status, total_amount, payment_method, unique_code, is_paid, created_at, updated_at)
-        VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
+        INSERT INTO orders (order_number, order_type, table_number, customer_name, customer_phone, status, total_amount, payment_method, unique_code, is_paid, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)
       `,
       )
         .bind(
@@ -122,6 +130,7 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
           body.orderType,
           body.tableNumber || null,
           body.customerName || "Pelanggan",
+          customerPhone,
           totalAmount,
           paymentMethod,
           uniqueCode,

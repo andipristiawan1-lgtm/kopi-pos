@@ -14,6 +14,7 @@ export default function Order() {
   );
   const [tableNumber, setTableNumber] = useState("");
   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [settings, setSettings] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,6 +77,10 @@ export default function Order() {
     if (orderType === "dine_in" && !tableNumber)
       return setError("Nomor meja wajib diisi.");
 
+    const normalizedPhone = customerPhone.replace(/\D/g, "");
+    if (normalizedPhone.length < 8 || normalizedPhone.length > 15)
+      return setError("Nomor WhatsApp wajib diisi dengan format yang benar.");
+
     setIsSubmitting(true);
     setError("");
 
@@ -90,6 +95,7 @@ export default function Order() {
           orderType,
           tableNumber,
           customerName,
+          customerPhone: normalizedPhone,
           paymentMethod,
           items: cart.map((item) => ({
             menuItemId: item.id,
@@ -100,6 +106,11 @@ export default function Order() {
 
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Gagal memesan");
+      try {
+        localStorage.setItem("warung_customer_phone", normalizedPhone);
+      } catch {
+        // Riwayat tetap dapat dicari melalui halaman public.
+      }
       navigate(`/order/success/${result.orderNumber}`);
     } catch (err: any) {
       setError(err.message);
@@ -221,6 +232,21 @@ export default function Order() {
               placeholder="Opsional"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-2 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-coffee-900 mb-1">
+              Nomor WhatsApp (Wajib)
+            </label>
+            <input
+              type="tel"
+              required
+              inputMode="tel"
+              placeholder="Contoh: 081234567890"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
               className="w-full border border-gray-300 rounded-lg p-2 text-sm"
             />
           </div>

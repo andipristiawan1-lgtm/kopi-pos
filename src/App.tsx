@@ -18,6 +18,7 @@ import UserManager from "./pages/admin/UserManager";
 import InventoryManager from "./pages/admin/InventoryManager";
 import KitchenDisplay from "./pages/pos/KitchenDisplay";
 import PaymentLogs from "./pages/admin/PaymentLogs";
+import CustomerOrderHistory from "./pages/landing/CustomerOrderHistory";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
             path="/order/success/:orderNumber"
             element={<OrderSuccess />}
           />
+          <Route path="/order/history" element={<CustomerOrderHistory />} />
           <Route path="/booking" element={<Booking />} />
         </Route>
 

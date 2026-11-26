@@ -39,6 +39,7 @@ export default function PublicLayout() {
     { name: "Menu", path: "/menu" },
     { name: "Booking Meja", path: "/booking" },
     { name: "Pesan Online", path: "/order" },
+    { name: "Riwayat Pesanan", path: "/order/history" },
   ];
 
   return (
