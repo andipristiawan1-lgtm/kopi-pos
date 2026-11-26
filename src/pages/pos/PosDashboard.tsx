@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import PrintStruk from "./PrintStruk";
 import AddOrderModal from "./AddOrderModal";
 import NewOrderModal from "./NewOrderModal";
+import Toast from "../../components/ui/Toast";
 import { Link } from "react-router-dom";
 
 type Order = {
@@ -29,6 +30,7 @@ export default function PosDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [addMenuOrderId, setAddMenuOrderId] = useState<number | null>(null);
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const handleLogout = async () => {
     const apiUrl = import.meta.env.DEV
@@ -57,7 +59,7 @@ export default function PosDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-    const updateStatus = async (id: number, status: string) => {
+  const updateStatus = async (id: number, status: string) => {
     const apiUrl = import.meta.env.DEV
       ? `http://127.0.0.1:8788/api/orders/${id}/status`
       : `/api/orders/${id}/status`;
@@ -72,13 +74,15 @@ export default function PosDashboard() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Gagal mengubah status");
+        setToast({ message: data.error || "Gagal mengubah status", type: "error" });
         return;
       }
 
-      fetchOrders(); // Refresh jika berhasil
+      fetchOrders();
+      setToast({ message: "Status berhasil diperbarui.", type: "success" });
+
     } catch (err) {
-      alert("Terjadi kesalahan jaringan.");
+      setToast({ message: "Terjadi kesalahan jaringan.", type: "error" });
     }
   };
 
@@ -94,6 +98,7 @@ export default function PosDashboard() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold text-coffee-900">
           Dashboard Kasir (POS)
@@ -137,6 +142,7 @@ export default function PosDashboard() {
         </div>
       </div>
 
+      {/* KONTEN */}
       {orders.length === 0 ? (
         <div className="text-center p-12 bg-white rounded-xl shadow-sm text-gray-500">
           Belum ada pesanan masuk hari ini.
@@ -146,7 +152,11 @@ export default function PosDashboard() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className={`bg-white rounded-xl shadow-md border-t-4 p-5 flex flex-col ${order.status === "pending" ? "border-red-500" : "border-yellow-500"}`}
+              className={`bg-white rounded-xl shadow-md border-t-4 p-5 flex flex-col ${
+                order.status === "pending" ? "border-red-500" : 
+                order.status === "preparing" ? "border-yellow-500" :
+                order.status === "ready" ? "border-blue-500" : "border-green-500"
+              }`}
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
@@ -164,7 +174,11 @@ export default function PosDashboard() {
                   </p>
                 </div>
                 <span
-                  className={`text-xs font-bold px-2 py-1 rounded uppercase ${order.status === "pending" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}
+                  className={`text-xs font-bold px-2 py-1 rounded uppercase ${
+                    order.status === "pending" ? "bg-red-100 text-red-700" : 
+                    order.status === "preparing" ? "bg-yellow-100 text-yellow-700" :
+                    order.status === "ready" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+                  }`}
                 >
                   {order.status}
                 </span>
@@ -172,29 +186,20 @@ export default function PosDashboard() {
 
               <div className="bg-coffee-50 p-3 rounded-lg mb-4 text-sm my-2 flex-grow">
                 <p className="font-bold text-coffee-900 mb-1">
-                  {order.order_type === "dine_in" &&
-                    `Dine-in (Meja ${order.table_number})`}
+                  {order.order_type === "dine_in" && `Dine-in (Meja ${order.table_number})`}
                   {order.order_type === "take_away" && "Take-away"}
-                  {order.order_type === "booking" &&
-                    `Booking Meja ${order.table_number}`}
+                  {order.order_type === "booking" && `Booking Meja ${order.table_number}`}
                 </p>
                 <p className="text-gray-600 mb-2">
                   Oleh: {order.customer_name}
                 </p>
 
-                {/* DAFTAR ITEM DENGAN HARGA */}
                 <ul className="space-y-1 mb-3">
                   {order.items.map((item, idx) => (
-                    <li
-                      key={idx}
-                      className="flex justify-between text-coffee-800 text-xs"
-                    >
-                      <span>
-                        {item.quantity}x {item.name}
-                      </span>
+                    <li key={idx} className="flex justify-between text-coffee-800 text-xs">
+                      <span>{item.quantity}x {item.name}</span>
                       <span className="text-gray-500">
-                        {item.quantity > 1 &&
-                          `@${item.price_at_time.toLocaleString("id-ID")}`}
+                        {item.quantity > 1 && `@${item.price_at_time.toLocaleString("id-ID")}`}
                         <span className="font-medium text-coffee-900 ml-2">
                           {item.subtotal.toLocaleString("id-ID")}
                         </span>
@@ -217,11 +222,14 @@ export default function PosDashboard() {
                     Rp {order.total_amount.toLocaleString("id-ID")}
                   </span>
                   <span
-                    className={`text-xs font-bold px-2 py-1 rounded ${order.is_paid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                    className={`text-xs font-bold px-2 py-1 rounded ${
+                      order.is_paid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                    }`}
                   >
                     {order.is_paid ? "✓ Lunas" : "Belum Bayar"}
                   </span>
                 </div>
+                
                 <div className="flex gap-2 w-full mt-1">
                   <button
                     onClick={() => setAddMenuOrderId(order.id)}
@@ -244,6 +252,7 @@ export default function PosDashboard() {
                     </button>
                   )}
                 </div>
+
                 <div className="flex gap-2 w-full">
                   {order.status === "pending" ? (
                     <button
@@ -274,6 +283,7 @@ export default function PosDashboard() {
         </div>
       )}
 
+      {/* MODAL & TOAST */}
       {selectedOrder && (
         <PrintStruk
           order={selectedOrder}
@@ -293,6 +303,15 @@ export default function PosDashboard() {
         <NewOrderModal
           onClose={() => setIsNewOrderOpen(false)}
           onSuccess={fetchOrders}
+        />
+      )}
+
+      {/* TOAST NOTIFICATION (INI YANG TADI KURANG) */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
     </div>
