@@ -1,9 +1,10 @@
 import { useState } from "react";
 
 export default function Login() {
-  const [email, setEmail] = useState("owner@warungkopi.id");
-  const [password, setPassword] = useState("owner123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -13,10 +14,11 @@ export default function Login() {
       : "/api/auth/login";
 
     try {
+      setIsSubmitting(true);
       const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
       const data = await res.json();
 
@@ -26,6 +28,8 @@ export default function Login() {
       window.location.href = "/pos";
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -68,8 +72,9 @@ export default function Login() {
           <button
             type="submit"
             className="w-full bg-coffee-500 text-white py-3 rounded-lg font-bold hover:bg-coffee-700 transition"
+            disabled={isSubmitting}
           >
-            Masuk
+            {isSubmitting ? "Sedang masuk..." : "Masuk"}
           </button>
         </form>
       </div>

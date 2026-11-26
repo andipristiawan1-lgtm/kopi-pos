@@ -18,7 +18,7 @@ export const onRequestGet: PagesFunction<{ DB: D1Database }> = async (
       SELECT u.id, u.name, u.role 
       FROM sessions s 
       JOIN users u ON s.user_id = u.id 
-      WHERE s.id = ? AND s.expires_at > ?
+      WHERE s.id = ? AND s.expires_at > ? AND u.is_active = 1
     `,
   )
     .bind(token, now)

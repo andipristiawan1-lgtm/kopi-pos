@@ -5,6 +5,8 @@ export default function UserManager() {
   const [users, setUsers] = useState<any[]>([]);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [message, setMessage] = useState("");
+  const [resetUser, setResetUser] = useState<any | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   const fetchUsers = () => {
     const apiUrl = import.meta.env.DEV
@@ -40,13 +42,48 @@ export default function UserManager() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Yakin ingin menghapus kasir ini?")) return;
+  const toggleStatus = async (user: any) => {
     const apiUrl = import.meta.env.DEV
-      ? `http://127.0.0.1:8788/api/admin/users?id=${id}`
-      : `/api/admin/users?id=${id}`;
-    await fetch(apiUrl, { method: "DELETE" });
-    fetchUsers();
+      ? "http://127.0.0.1:8788/api/admin/users"
+      : "/api/admin/users";
+
+    const res = await fetch(apiUrl, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: user.id, isActive: !Boolean(user.is_active) }),
+    });
+    const data = await res.json().catch(() => null);
+
+    if (res.ok) {
+      setMessage(user.is_active ? "Kasir berhasil dinonaktifkan." : "Kasir berhasil diaktifkan.");
+      fetchUsers();
+    } else {
+      setMessage(data?.error || "Gagal mengubah status kasir.");
+    }
+  };
+
+  const handleResetPassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!resetUser) return;
+
+    const apiUrl = import.meta.env.DEV
+      ? "http://127.0.0.1:8788/api/admin/users"
+      : "/api/admin/users";
+
+    const res = await fetch(apiUrl, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: resetUser.id, password: newPassword }),
+    });
+    const data = await res.json().catch(() => null);
+
+    if (res.ok) {
+      setMessage("Password kasir berhasil direset.");
+      setResetUser(null);
+      setNewPassword("");
+    } else {
+      setMessage(data?.error || "Gagal mereset password.");
+    }
   };
 
   return (
@@ -118,6 +155,7 @@ export default function UserManager() {
               <th className="p-4 text-sm">Nama</th>
               <th className="p-4 text-sm">Email</th>
               <th className="p-4 text-sm">Role</th>
+              <th className="p-4 text-sm">Status</th>
               <th className="p-4 text-sm">Aksi</th>
             </tr>
           </thead>
@@ -130,13 +168,32 @@ export default function UserManager() {
                   {user.role}
                 </td>
                 <td className="p-4">
+                  <span
+                    className={`text-xs font-bold py-1 px-3 rounded-full ${
+                      user.is_active
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {user.is_active ? "Aktif" : "Tidak Aktif"}
+                  </span>
+                </td>
+                <td className="p-4">
                   {user.role !== "owner" && (
-                    <button
-                      onClick={() => handleDelete(user.id)}
-                      className="text-red-500 text-xs font-bold hover:underline"
-                    >
-                      Hapus
-                    </button>
+                    <>
+                      <button
+                        onClick={() => toggleStatus(user)}
+                        className="text-blue-500 text-xs font-bold hover:underline mr-2"
+                      >
+                        {user.is_active ? "Nonaktifkan" : "Aktifkan"}
+                      </button>
+                      <button
+                        onClick={() => setResetUser(user)}
+                        className="text-green-500 text-xs font-bold hover:underline"
+                      >
+                        Reset Password
+                      </button>
+                    </>
                   )}
                 </td>
               </tr>
@@ -144,6 +201,28 @@ export default function UserManager() {
           </tbody>
         </table>
       </div>
+
+      {resetUser !== null && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <form onSubmit={handleResetPassword} className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm">
+            <h2 className="text-lg font-bold text-coffee-900 mb-2">Reset Password</h2>
+            <p className="text-sm text-gray-600 mb-4">Masukkan password baru untuk {resetUser.name}.</p>
+            <input
+              type="password"
+              required
+              minLength={6}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full border p-2 rounded text-sm mb-4"
+              placeholder="Minimal 6 karakter"
+            />
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setResetUser(null)} className="bg-gray-200 text-gray-700 py-2 px-4 rounded text-sm font-semibold">Batal</button>
+              <button type="submit" className="bg-coffee-600 text-white py-2 px-4 rounded text-sm font-bold">Simpan Password Baru</button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

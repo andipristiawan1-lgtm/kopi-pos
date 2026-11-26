@@ -1,8 +1,14 @@
+import { compare } from "bcryptjs";
+
 // Fungsi untuk memverifikasi password dengan Web Crypto (PBKDF2)
 async function verifyPassword(
   password: string,
   storedHash: string,
 ): Promise<boolean> {
+  if (storedHash.startsWith("$2")) {
+    return compare(password, storedHash);
+  }
+
   const [salt, originalHash] = storedHash.split(":");
   if (!salt || !originalHash) return false;
 
@@ -41,10 +47,19 @@ export const onRequestPost: PagesFunction<{ DB: D1Database }> = async (
   try {
     const { email, password } = (await context.request.json()) as any;
 
+    if (!email || !password) {
+      return Response.json(
+        { error: "Email dan password wajib diisi" },
+        { status: 400 },
+      );
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
     const user = await context.env.DB.prepare(
       "SELECT * FROM users WHERE email = ? AND is_active = 1",
     )
-      .bind(email)
+      .bind(normalizedEmail)
       .first<any>();
 
     if (!user) {
