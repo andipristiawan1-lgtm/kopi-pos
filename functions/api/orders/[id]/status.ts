@@ -21,6 +21,16 @@ export const onRequestPatch: PagesFunction<{ DB: D1Database }> = async (
       return Response.json({ error: "Status pesanan tidak valid" }, { status: 400 });
     }
 
+    // ========================================================
+    // VALIDASI BARU: Cegah status 'completed' jika belum bayar
+    // ========================================================
+    if (newStatus === "completed" && !order.is_paid) {
+      return Response.json(
+        { error: "Pesanan belum dibayar. Harap terima pembayaran terlebih dahulu." },
+        { status: 400 }
+      );
+    }
+
     await context.env.DB.prepare(
       "UPDATE orders SET status = ?, updated_at = ? WHERE id = ?",
     )
