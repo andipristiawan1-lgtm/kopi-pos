@@ -158,3 +158,10 @@ export const paymentLogs = sqliteTable("payment_logs", {
   receivedAt: integer("received_at").notNull(),
   processedAt: integer("processed_at"),
 });
+
+//======
+export const categories = sqliteTable("categories", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
