@@ -20,8 +20,6 @@ function extractAmount(message: string): number | null {
 
 function sanitizeMessage(message: string): string {
   return message
-    .replace(/\b\d{4}[ -]?\d{4}[ -]?\d{4}[ -]?\d{4}\b/g, "[CARD]")
-    .replace(/\b\d{6}\b/g, "[PIN]")
     .replace(/(otp|pin|password|token)[\s:=]*[0-9A-Za-z-]+/gi, "[SECRET]")
     .slice(0, 4000);
 }
