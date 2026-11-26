@@ -203,22 +203,66 @@ export default function UserManager() {
       </div>
 
       {resetUser !== null && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <form onSubmit={handleResetPassword} className="bg-white p-6 rounded-xl shadow-md w-full max-w-sm">
-            <h2 className="text-lg font-bold text-coffee-900 mb-2">Reset Password</h2>
-            <p className="text-sm text-gray-600 mb-4">Masukkan password baru untuk {resetUser.name}.</p>
+        <div
+          className="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reset-password-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setResetUser(null);
+          }}
+        >
+          <form
+            onSubmit={handleResetPassword}
+            className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-2xl border border-white/60 p-5 sm:p-6"
+          >
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h2 id="reset-password-title" className="text-xl font-bold text-coffee-900">
+                  Reset Password
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Untuk akun <strong className="text-gray-700">{resetUser.name}</strong>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResetUser(null)}
+                className="w-10 h-10 shrink-0 rounded-full bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-600 text-2xl leading-none"
+                aria-label="Tutup"
+              >
+                ×
+              </button>
+            </div>
+
+            <label className="block text-sm font-bold text-coffee-900 mb-2">
+              Password Baru
+            </label>
             <input
               type="password"
               required
               minLength={6}
+              autoFocus
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full border p-2 rounded text-sm mb-4"
+              className="w-full h-12 border border-slate-300 rounded-xl px-3 text-sm focus:outline-none focus:ring-2 focus:ring-coffee-300 focus:border-coffee-500"
               placeholder="Minimal 6 karakter"
             />
-            <div className="flex justify-end gap-2">
-              <button type="button" onClick={() => setResetUser(null)} className="bg-gray-200 text-gray-700 py-2 px-4 rounded text-sm font-semibold">Batal</button>
-              <button type="submit" className="bg-coffee-600 text-white py-2 px-4 rounded text-sm font-bold">Simpan Password Baru</button>
+
+            <div className="grid grid-cols-2 gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setResetUser(null)}
+                className="h-12 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold hover:bg-slate-50"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="h-12 rounded-xl bg-coffee-700 text-white font-bold shadow-md hover:bg-coffee-900"
+              >
+                Simpan Password
+              </button>
             </div>
           </form>
         </div>
