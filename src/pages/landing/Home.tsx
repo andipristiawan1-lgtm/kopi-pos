@@ -81,11 +81,11 @@ export default function Home() {
         {heroImages.map((imageUrl, index) => (
           <div
             key={imageUrl}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${index === heroIndex ? "opacity-50" : "opacity-0"}`}
+            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${index === heroIndex ? "opacity-100" : "opacity-0"}`}
             style={{ backgroundImage: `url('${imageUrl}')` }}
           />
         ))}
-        <div className="absolute inset-0 bg-coffee-900/75" />
+       <div className="absolute inset-0 bg-black/40" />
         <div className="relative max-w-6xl mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center z-10 w-full">
           <span className="bg-coffee-500/30 text-coffee-100 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase mb-6 backdrop-blur-sm border border-coffee-500/50">
             Selamat Datang di {storeName}
