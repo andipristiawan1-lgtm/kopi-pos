@@ -81,7 +81,7 @@ export default function Home() {
         {heroImages.map((imageUrl, index) => (
           <div
             key={imageUrl}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${index === heroIndex ? "opacity-100" : "opacity-0"}`}
+            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${index === heroIndex ? "opacity-50" : "opacity-0"}`}
             style={{ backgroundImage: `url('${imageUrl}')` }}
           />
         ))}
