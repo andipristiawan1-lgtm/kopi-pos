@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+// ============================================================
+// CONFIG
+// ============================================================
 const BRIDGE_URL = "http://localhost:9100";
 
 // ============================================================
@@ -26,29 +29,29 @@ type HealthResponse = {
 
 type PrintStrukProps = {
   order: any;
-  store?: StoreProfile;        // <-- BARU: dari halaman profil
+  store?: StoreProfile;
   onClose: () => void;
 };
 
 // ============================================================
-// DEFAULT (fallback kalau store kosong)
+// DEFAULT STORE (fallback)
 // ============================================================
-const DEFAULT_STORE: StoreProfile = {
-  name: "STRUK TRANSAKSI",
+const DEFAULT_STORE: Required<StoreProfile> = {
+  name: "PRINT STRUK",
   address: "Jl. Raya Belitang No. 123",
   phone: "0812-3456-7890",
 };
 
 function resolveStore(store?: StoreProfile): Required<StoreProfile> {
   return {
-    name: store?.name?.trim() || DEFAULT_STORE.name!,
-    address: store?.address?.trim() || DEFAULT_STORE.address!,
-    phone: store?.phone?.trim() || DEFAULT_STORE.phone!,
+    name: store?.name?.trim() || DEFAULT_STORE.name,
+    address: store?.address?.trim() || DEFAULT_STORE.address,
+    phone: store?.phone?.trim() || DEFAULT_STORE.phone,
   };
 }
 
 // ============================================================
-// FORMAT JAM — WAJIB JAKARTA
+// FORMAT JAM — SELALU WIB (Asia/Jakarta)
 // ============================================================
 function formatJakarta(unixTs: number): string {
   return new Date(unixTs * 1000).toLocaleString("id-ID", {
@@ -62,7 +65,7 @@ function formatJakarta(unixTs: number): string {
 }
 
 // ============================================================
-// BRIDGE API (sama seperti sebelumnya)
+// BRIDGE API (Cleanter)
 // ============================================================
 async function getHealth(): Promise<HealthResponse | null> {
   try {
@@ -82,6 +85,7 @@ async function sendPrint(content: unknown[]): Promise<{ jobId?: string }> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ cut: true, content }),
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     const e: any = new Error(err.detail || `HTTP ${res.status}`);
@@ -92,6 +96,9 @@ async function sendPrint(content: unknown[]): Promise<{ jobId?: string }> {
   return await res.json().catch(() => ({}));
 }
 
+// ============================================================
+// LABEL ERROR CODE
+// ============================================================
 const ERROR_LABEL: Record<string, string> = {
   bluetooth_permission_missing: "Izin Bluetooth belum diberikan ke Cleanter",
   bluetooth_disabled: "Bluetooth HP mati",
@@ -101,18 +108,24 @@ const ERROR_LABEL: Record<string, string> = {
 };
 
 // ============================================================
-// RECEIPT BUILDER — terima `store`
+// RECEIPT BUILDER
 // ============================================================
 function buildReceipt(order: any, store: Required<StoreProfile>): unknown[] {
   const b: unknown[] = [];
 
-  // Header — dari store
-  b.push({ type: "text", text: store.name.toUpperCase(), align: "center", bold: true, size: "large" });
+  // ---------- HEADER ----------
+  b.push({
+    type: "text",
+    text: store.name.toUpperCase(),
+    align: "center",
+    bold: true,
+    size: "large",
+  });
   b.push({ type: "text", text: store.address, align: "center", size: "small" });
   b.push({ type: "text", text: `Telp: ${store.phone}`, align: "center", size: "small" });
   b.push({ type: "divider" });
 
-  // Info pesanan
+  // ---------- INFO PESANAN ----------
   b.push({ type: "row", left: "No. Pesanan", right: order.order_number || "-" });
   b.push({ type: "row", left: "Waktu", right: formatJakarta(order.created_at) });
 
@@ -125,16 +138,26 @@ function buildReceipt(order: any, store: Required<StoreProfile>): unknown[] {
   if (order.order_type === "hotel") {
     b.push({ type: "row", left: "Check-in", right: order.check_in || "-" });
     b.push({ type: "row", left: "Check-out", right: order.check_out || "-" });
-    b.push({ type: "row", left: "Tamu", right: `${order.adults || 0} Dewasa, ${order.children || 0} Anak` });
+    b.push({
+      type: "row",
+      left: "Tamu",
+      right: `${order.adults || 0} Dewasa, ${order.children || 0} Anak`,
+    });
   } else if (order.order_type === "booking") {
     b.push({ type: "row", left: "Tanggal", right: order.booking_date || "-" });
     b.push({ type: "row", left: "Jam Mulai", right: order.booking_time || "-" });
   }
 
   b.push({ type: "row", left: "Pelanggan", right: order.customer_name || "-" });
-  b.push({ type: "row", left: "Status", right: order.is_paid ? "LUNAS" : "BELUM BAYAR", bold: true });
+  b.push({
+    type: "row",
+    left: "Status",
+    right: order.is_paid ? "LUNAS" : "BELUM BAYAR",
+    bold: true,
+  });
   b.push({ type: "divider" });
 
+  // ---------- ITEM ----------
   (order.items || []).forEach((item: any) => {
     b.push({
       type: "row",
@@ -144,6 +167,7 @@ function buildReceipt(order: any, store: Required<StoreProfile>): unknown[] {
   });
   b.push({ type: "divider" });
 
+  // ---------- TOTAL ----------
   b.push({
     type: "row",
     left: "TOTAL",
@@ -151,6 +175,7 @@ function buildReceipt(order: any, store: Required<StoreProfile>): unknown[] {
     bold: true,
   });
 
+  // ---------- FOOTER ----------
   b.push({ type: "feed", lines: 1 });
   b.push({ type: "text", text: "Terima Kasih", align: "center", size: "small" });
   b.push({ type: "text", text: "Atas Kunjungan Anda", align: "center", size: "small" });
@@ -160,10 +185,10 @@ function buildReceipt(order: any, store: Required<StoreProfile>): unknown[] {
 }
 
 // ============================================================
-// KOMPONEN
+// KOMPONEN UTAMA
 // ============================================================
 export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
-  const resolved = resolveStore(store);        // <-- resolve sekali
+  const resolved = resolveStore(store);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [checking, setChecking] = useState(true);
   const [printing, setPrinting] = useState(false);
@@ -188,6 +213,17 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
 
   const handlePrint = async () => {
     if (!order || printing) return;
+
+    // ---------- GUARD: cegah cetak kalau belum bayar ----------
+    if (!order.is_paid) {
+      setResult({
+        type: "error",
+        text: "Tidak bisa mencetak — pesanan belum dibayar",
+        fix: "Tandai pesanan sebagai LUNAS terlebih dahulu.",
+      });
+      return;
+    }
+
     setPrinting(true);
     setResult(null);
     try {
@@ -211,36 +247,59 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
 
   if (!order) return null;
 
+  // ---------- STATUS LOGIC ----------
+  const isPaid = !!order.is_paid;
   const bridgeInstalled = !!health;
   const printerReady = !!health?.printer?.connected;
-  const canPrint = bridgeInstalled && printerReady && !printing;
+  const canPrint = bridgeInstalled && printerReady && !printing && isPaid;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg w-full max-w-sm shadow-xl max-h-[90vh] flex flex-col">
 
-        {/* STATUS BAR — sama */}
+        {/* ---------- STATUS BAR CLEANTER ---------- */}
         <div className="p-3 border-b bg-gray-50 text-xs">
           {checking ? (
             <p className="text-gray-500">🔄 Mengecek Cleanter...</p>
           ) : !bridgeInstalled ? (
             <div className="text-red-700">
               <p className="font-bold">❌ Cleanter tidak terdeteksi</p>
-              <p className="text-gray-600 mt-1">Install Cleanter di HP Android, lalu buka halaman ini via Chrome.</p>
+              <p className="text-gray-600 mt-1">
+                Install Cleanter di HP Android, lalu buka halaman ini via Chrome.
+              </p>
             </div>
           ) : printerReady ? (
-            <p className="text-green-700 font-bold">✅ Siap cetak — {health?.printer.name}</p>
+            <p className="text-green-700 font-bold">
+              ✅ Siap cetak — {health?.printer.name}
+            </p>
           ) : (
             <div className="text-red-700">
-              <p className="font-bold">⚠️ {ERROR_LABEL[health?.printer.problem || ""] || "Printer belum siap"}</p>
+              <p className="font-bold">
+                ⚠️ {ERROR_LABEL[health?.printer.problem || ""] || "Printer belum siap"}
+              </p>
               {health?.printer.problem && (
-                <p className="text-gray-600 mt-1 font-mono text-[10px]">{health.printer.problem}</p>
+                <p className="text-gray-600 mt-1 font-mono text-[10px]">
+                  {health.printer.problem}
+                </p>
               )}
             </div>
           )}
         </div>
 
-        {/* PREVIEW — pakai `resolved` & formatJakarta */}
+        {/* ---------- BANNER BELUM BAYAR ---------- */}
+        {!isPaid && (
+          <div className="mx-4 mt-3 p-3 rounded text-xs bg-red-50 text-red-800 border-2 border-red-300">
+            <p className="font-bold flex items-center gap-1">
+              🔒 Status: BELUM BAYAR
+            </p>
+            <p className="mt-1 text-gray-700">
+              Struk tidak bisa dicetak sebelum pembayaran dikonfirmasi.
+              Tandai pesanan sebagai <b>LUNAS</b> terlebih dahulu.
+            </p>
+          </div>
+        )}
+
+        {/* ---------- PREVIEW STRUK ---------- */}
         <div className="p-5 overflow-y-auto flex-1">
           <div className="font-mono text-xs text-black">
             <div className="text-center mb-4">
@@ -268,6 +327,7 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
                   {order.order_type === "take_away" && "Take-away"}
                 </span>
               </div>
+
               {order.order_type === "hotel" && (
                 <>
                   <div className="flex justify-between">
@@ -280,10 +340,13 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
                   </div>
                   <div className="flex justify-between">
                     <span>Tamu</span>
-                    <span>{order.adults} Dewasa, {order.children} Anak</span>
+                    <span>
+                      {order.adults} Dewasa, {order.children} Anak
+                    </span>
                   </div>
                 </>
               )}
+
               {order.order_type === "booking" && (
                 <>
                   <div className="flex justify-between">
@@ -296,10 +359,12 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
                   </div>
                 </>
               )}
+
               <div className="flex justify-between">
                 <span>Pelanggan</span>
                 <span>{order.customer_name}</span>
               </div>
+
               <div className="flex justify-between font-bold pt-2 border-t mt-2">
                 <span>Status</span>
                 <span className={order.is_paid ? "text-green-700" : "text-red-600"}>
@@ -311,9 +376,11 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
             <p className="mb-2">--------------------------------</p>
 
             <div className="mb-3 space-y-1">
-              {order.items.map((item: any, idx: number) => (
+              {(order.items || []).map((item: any, idx: number) => (
                 <div key={idx} className="flex justify-between">
-                  <span>{item.quantity}x {item.name}</span>
+                  <span>
+                    {item.quantity}x {item.name}
+                  </span>
                   <span>{item.subtotal.toLocaleString("id-ID")}</span>
                 </div>
               ))}
@@ -331,6 +398,7 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
           </div>
         </div>
 
+        {/* ---------- RESULT MESSAGE ---------- */}
         {result && (
           <div
             className={`mx-4 mb-2 p-3 rounded text-xs ${
@@ -346,6 +414,7 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
           </div>
         )}
 
+        {/* ---------- BUTTONS ---------- */}
         <div className="p-4 border-t flex gap-2">
           <button
             onClick={onClose}
@@ -353,20 +422,40 @@ export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
           >
             Tutup
           </button>
+
           {!printerReady && bridgeInstalled && (
             <button
               onClick={refresh}
+              title="Cek ulang status printer"
               className="px-4 py-2 bg-yellow-500 text-white rounded font-bold hover:bg-yellow-600"
             >
               🔄
             </button>
           )}
+
           <button
             onClick={handlePrint}
             disabled={!canPrint}
-            className="flex-1 px-4 py-2 text-white bg-coffee-500 rounded font-bold hover:bg-coffee-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            title={
+              !isPaid
+                ? "Tandai pesanan sebagai LUNAS untuk mencetak struk"
+                : !printerReady
+                ? "Printer belum siap"
+                : ""
+            }
+            className={`flex-1 px-4 py-2 text-white rounded font-bold flex items-center justify-center gap-2 ${
+              !isPaid
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-coffee-500 hover:bg-coffee-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            }`}
           >
-            {printing ? <>⏳ Mencetak...</> : <>🖨️ Cetak</>}
+            {printing ? (
+              <>⏳ Mencetak...</>
+            ) : !isPaid ? (
+              <>🔒 Belum Bayar</>
+            ) : (
+              <>🖨️ Cetak</>
+            )}
           </button>
         </div>
       </div>
