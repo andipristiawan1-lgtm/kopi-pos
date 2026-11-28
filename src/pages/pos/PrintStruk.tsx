@@ -1,131 +1,74 @@
-type PrintStrukProps = {
-  order: any;
-  onClose: () => void;
-};
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test RawBT</title>
+</head>
+<body style="font-family:sans-serif;padding:20px;">
+  <h2>Test Cetak RawBT</h2>
 
-export default function PrintStruk({ order, onClose }: PrintStrukProps) {
-  if (!order) return null;
+  <button id="btn1" style="padding:15px;font-size:16px;margin:5px;width:100%;">
+    1. Buka RawBT (Intent Kosong)
+  </button>
 
-  const handlePrint = () => {
-    window.print();
-  };
+  <button id="btn2" style="padding:15px;font-size:16px;margin:5px;width:100%;">
+    2. Cetak Teks Sederhana
+  </button>
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      {/* Area Struk (yang akan dicetak) */}
-      <div className="bg-white p-6 rounded-lg w-full max-w-sm shadow-xl">
-        <div id="struk-area" className="font-mono text-sm text-black">
-          <div className="text-center mb-4">
-            <h2 className="font-bold text-lg uppercase">Warung Kopi</h2>
-            <p className="text-xs">Jl. Kopi Nikmat No. 123</p>
-            <p className="text-xs">Telp: 0812-3456-7890</p>
-            <p className="mt-2">--------------------------------</p>
-          </div>
+  <button id="btn3" style="padding:15px;font-size:16px;margin:5px;width:100%;">
+    3. Cetak Struk Lengkap
+  </button>
 
-          <div className="mb-2 text-xs space-y-1">
-            <div className="flex justify-between">
-              <span>No. Pesanan:</span>
-              <span>{order.order_number}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Waktu:</span>
-              <span>
-                {new Date(order.created_at * 1000).toLocaleString("id-ID")}
-              </span>
-            </div>
+  <pre id="log" style="background:#f0f0f0;padding:10px;margin-top:20px;font-size:11px;white-space:pre-wrap;"></pre>
 
-            {/* PERBAIKAN TIPE PESANAN */}
-            <div className="flex justify-between">
-              <span>Tipe:</span>
-              <span className="font-bold">
-                {order.order_type === "dine_in" &&
-                  `Dine-in (Meja ${order.table_number})`}
-                {order.order_type === "take_away" && "Take-away"}
-                {order.order_type === "booking" &&
-                  `Booking Meja ${order.table_number}`}
-              </span>
-            </div>
+  <script>
+    const log = (msg) => {
+      document.getElementById('log').textContent += msg + "\n";
+    };
 
-            <div className="flex justify-between">
-              <span>Metode:</span>
-              <span className="uppercase">{order.payment_method}</span>
-            </div>
+    // Tombol 1: Buka aplikasi saja, tanpa data
+    document.getElementById('btn1').onclick = () => {
+      log("Membuka RawBT...");
+      window.location.href =
+        "intent:#Intent;package=ru.a402d.rawbtprinter;end";
+    };
 
-            {/* STATUS PEMBAYARAN */}
-            <div className="flex justify-between font-bold">
-              <span>Status:</span>
-              <span
-                className={order.is_paid ? "text-green-700" : "text-red-600"}
-              >
-                {order.is_paid ? "LUNAS" : "BELUM BAYAR"}
-              </span>
-            </div>
+    // Tombol 2: Cetak teks sederhana
+    document.getElementById('btn2').onclick = () => {
+      const text = "<110><1>TEST PRINT<0>\n<10>Halo dari Chrome\n\n\n\n";
+      const encoded = encodeURIComponent(text);
+      const url = `intent:${encoded}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`;
+      log("Kirim: " + url.substring(0, 80) + "...");
+      window.location.href = url;
+    };
 
-            <div className="flex justify-between">
-              <span>Pelanggan:</span>
-              <span>{order.customer_name}</span>
-            </div>
-          </div>
+    // Tombol 3: Struk lengkap
+    document.getElementById('btn3').onclick = () => {
+      let str = "";
+      str += "<11><1>HOTEL BELITANG<0>\n";
+      str += "<11>Jl. Raya Belitang No. 123\n";
+      str += "<11>--------------------------------\n";
+      str += "<10>No  : TEST-001\n";
+      str += "<10>Tgl : " + new Date().toLocaleString("id-ID") + "\n";
+      str += "<11>--------------------------------\n";
+      str += "<10>1x Nasi Goreng\n";
+      str += "<12>    Rp 25.000\n";
+      str += "<10>2x Es Teh\n";
+      str += "<12>    Rp 10.000\n";
+      str += "<11>--------------------------------\n";
+      str += "<10><1>TOTAL: Rp 35.000<0>\n";
+      str += "<11>Terima Kasih\n\n\n\n";
 
-          <p className="text-xs mb-2">--------------------------------</p>
+      const encoded = encodeURIComponent(str);
+      const url = `intent:${encoded}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`;
+      log("Mengirim struk...");
+      window.location.href = url;
+    };
 
-          {/* DAFTAR ITEM DENGAN HARGA */}
-          <div className="mb-4 text-xs space-y-2">
-            {order.items.map((item: any, idx: number) => (
-              <div key={idx}>
-                <div className="flex justify-between">
-                  <span>
-                    {item.quantity}x {item.name}
-                  </span>
-                  <span>{item.subtotal.toLocaleString("id-ID")}</span>
-                </div>
-                {/* Tampilkan harga satuan jika lebih dari 1 */}
-                {item.quantity > 1 && (
-                  <div className="text-[10px] text-gray-600 text-right">
-                    @ {item.price_at_time.toLocaleString("id-ID")}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <p className="text-xs mb-2">--------------------------------</p>
-
-          <div className="flex justify-between font-bold text-base mb-4">
-            <span>TOTAL</span>
-            <span>Rp {order.total_amount.toLocaleString("id-ID")}</span>
-          </div>
-
-          {/* CATATAN KHUSUS UNTUK BOOKING */}
-          {order.order_type === "booking" && (
-            <div className="text-[10px] text-center mb-4 text-gray-700 italic">
-              *Total di atas sudah termasuk DP Booking.
-              <br />
-              Sisa pelunasan dibayar saat kedatangan.
-            </div>
-          )}
-
-          <p className="text-center text-xs mt-6">
-            Terima Kasih Atas Kunjungan Anda
-          </p>
-        </div>
-
-        {/* Tombol Aksi (Tidak ikut tercetak) */}
-        <div className="flex gap-2 mt-6 print:hidden">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-gray-600 bg-gray-100 rounded font-bold hover:bg-gray-200"
-          >
-            Tutup
-          </button>
-          <button
-            onClick={handlePrint}
-            className="flex-1 px-4 py-2 text-white bg-coffee-500 rounded font-bold hover:bg-coffee-700"
-          >
-            Cetak
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+    log("User Agent: " + navigator.userAgent);
+    log("Android? " + /Android/i.test(navigator.userAgent));
+    log("HTTPS? " + location.protocol);
+  </script>
+</body>
+</html>
