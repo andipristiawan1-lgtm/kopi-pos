@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 
-// ============================================================
-// CONFIG
-// ============================================================
 const BRIDGE_URL = "http://localhost:9100";
 
 // ============================================================
 // TYPES
 // ============================================================
+type StoreProfile = {
+  name?: string;
+  address?: string;
+  phone?: string;
+};
+
 type HealthResponse = {
   status: string;
   version?: string;
@@ -23,11 +26,43 @@ type HealthResponse = {
 
 type PrintStrukProps = {
   order: any;
+  store?: StoreProfile;        // <-- BARU: dari halaman profil
   onClose: () => void;
 };
 
 // ============================================================
-// BRIDGE API
+// DEFAULT (fallback kalau store kosong)
+// ============================================================
+const DEFAULT_STORE: StoreProfile = {
+  name: "STRUK TRANSAKSI",
+  address: "Jl. Raya Belitang No. 123",
+  phone: "0812-3456-7890",
+};
+
+function resolveStore(store?: StoreProfile): Required<StoreProfile> {
+  return {
+    name: store?.name?.trim() || DEFAULT_STORE.name!,
+    address: store?.address?.trim() || DEFAULT_STORE.address!,
+    phone: store?.phone?.trim() || DEFAULT_STORE.phone!,
+  };
+}
+
+// ============================================================
+// FORMAT JAM — WAJIB JAKARTA
+// ============================================================
+function formatJakarta(unixTs: number): string {
+  return new Date(unixTs * 1000).toLocaleString("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// ============================================================
+// BRIDGE API (sama seperti sebelumnya)
 // ============================================================
 async function getHealth(): Promise<HealthResponse | null> {
   try {
@@ -37,7 +72,7 @@ async function getHealth(): Promise<HealthResponse | null> {
     if (!res.ok) return null;
     return await res.json();
   } catch {
-    return null; // Cleanter tidak terinstall / mati
+    return null;
   }
 }
 
@@ -47,7 +82,6 @@ async function sendPrint(content: unknown[]): Promise<{ jobId?: string }> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ cut: true, content }),
   });
-
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     const e: any = new Error(err.detail || `HTTP ${res.status}`);
@@ -58,9 +92,6 @@ async function sendPrint(content: unknown[]): Promise<{ jobId?: string }> {
   return await res.json().catch(() => ({}));
 }
 
-// ============================================================
-// Terjemahan error code (opsional — docs sudah sediakan `fix`)
-// ============================================================
 const ERROR_LABEL: Record<string, string> = {
   bluetooth_permission_missing: "Izin Bluetooth belum diberikan ke Cleanter",
   bluetooth_disabled: "Bluetooth HP mati",
@@ -70,24 +101,20 @@ const ERROR_LABEL: Record<string, string> = {
 };
 
 // ============================================================
-// RECEIPT BUILDER
+// RECEIPT BUILDER — terima `store`
 // ============================================================
-function buildReceipt(order: any): unknown[] {
+function buildReceipt(order: any, store: Required<StoreProfile>): unknown[] {
   const b: unknown[] = [];
 
-  // Header
-  b.push({ type: "text", text: "HOTEL BELITANG", align: "center", bold: true, size: "large" });
-  b.push({ type: "text", text: "Jl. Raya Belitang No. 123", align: "center", size: "small" });
-  b.push({ type: "text", text: "Telp: 0812-3456-7890", align: "center", size: "small" });
+  // Header — dari store
+  b.push({ type: "text", text: store.name.toUpperCase(), align: "center", bold: true, size: "large" });
+  b.push({ type: "text", text: store.address, align: "center", size: "small" });
+  b.push({ type: "text", text: `Telp: ${store.phone}`, align: "center", size: "small" });
   b.push({ type: "divider" });
 
   // Info pesanan
   b.push({ type: "row", left: "No. Pesanan", right: order.order_number || "-" });
-  b.push({
-    type: "row",
-    left: "Waktu",
-    right: new Date(order.created_at * 1000).toLocaleString("id-ID"),
-  });
+  b.push({ type: "row", left: "Waktu", right: formatJakarta(order.created_at) });
 
   let tipe = "Take-away";
   if (order.order_type === "hotel") tipe = "Reservasi Kamar";
@@ -98,26 +125,16 @@ function buildReceipt(order: any): unknown[] {
   if (order.order_type === "hotel") {
     b.push({ type: "row", left: "Check-in", right: order.check_in || "-" });
     b.push({ type: "row", left: "Check-out", right: order.check_out || "-" });
-    b.push({
-      type: "row",
-      left: "Tamu",
-      right: `${order.adults || 0} Dewasa, ${order.children || 0} Anak`,
-    });
+    b.push({ type: "row", left: "Tamu", right: `${order.adults || 0} Dewasa, ${order.children || 0} Anak` });
   } else if (order.order_type === "booking") {
     b.push({ type: "row", left: "Tanggal", right: order.booking_date || "-" });
     b.push({ type: "row", left: "Jam Mulai", right: order.booking_time || "-" });
   }
 
   b.push({ type: "row", left: "Pelanggan", right: order.customer_name || "-" });
-  b.push({
-    type: "row",
-    left: "Status",
-    right: order.is_paid ? "LUNAS" : "BELUM BAYAR",
-    bold: true,
-  });
+  b.push({ type: "row", left: "Status", right: order.is_paid ? "LUNAS" : "BELUM BAYAR", bold: true });
   b.push({ type: "divider" });
 
-  // Item
   (order.items || []).forEach((item: any) => {
     b.push({
       type: "row",
@@ -127,7 +144,6 @@ function buildReceipt(order: any): unknown[] {
   });
   b.push({ type: "divider" });
 
-  // Total
   b.push({
     type: "row",
     left: "TOTAL",
@@ -135,7 +151,6 @@ function buildReceipt(order: any): unknown[] {
     bold: true,
   });
 
-  // Footer
   b.push({ type: "feed", lines: 1 });
   b.push({ type: "text", text: "Terima Kasih", align: "center", size: "small" });
   b.push({ type: "text", text: "Atas Kunjungan Anda", align: "center", size: "small" });
@@ -147,7 +162,8 @@ function buildReceipt(order: any): unknown[] {
 // ============================================================
 // KOMPONEN
 // ============================================================
-export default function PrintStruk({ order, onClose }: PrintStrukProps) {
+export default function PrintStruk({ order, store, onClose }: PrintStrukProps) {
+  const resolved = resolveStore(store);        // <-- resolve sekali
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [checking, setChecking] = useState(true);
   const [printing, setPrinting] = useState(false);
@@ -175,7 +191,7 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
     setPrinting(true);
     setResult(null);
     try {
-      const content = buildReceipt(order);
+      const content = buildReceipt(order, resolved);
       const res = await sendPrint(content);
       setResult({
         type: "success",
@@ -195,7 +211,6 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
 
   if (!order) return null;
 
-  // ---------- Status logic ----------
   const bridgeInstalled = !!health;
   const printerReady = !!health?.printer?.connected;
   const canPrint = bridgeInstalled && printerReady && !printing;
@@ -204,42 +219,34 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg w-full max-w-sm shadow-xl max-h-[90vh] flex flex-col">
 
-        {/* ---------- STATUS BAR ---------- */}
+        {/* STATUS BAR — sama */}
         <div className="p-3 border-b bg-gray-50 text-xs">
           {checking ? (
             <p className="text-gray-500">🔄 Mengecek Cleanter...</p>
           ) : !bridgeInstalled ? (
             <div className="text-red-700">
               <p className="font-bold">❌ Cleanter tidak terdeteksi</p>
-              <p className="text-gray-600 mt-1">
-                Install Cleanter di HP Android, lalu buka halaman ini via Chrome.
-              </p>
+              <p className="text-gray-600 mt-1">Install Cleanter di HP Android, lalu buka halaman ini via Chrome.</p>
             </div>
           ) : printerReady ? (
-            <p className="text-green-700 font-bold">
-              ✅ Siap cetak — {health?.printer.name}
-            </p>
+            <p className="text-green-700 font-bold">✅ Siap cetak — {health?.printer.name}</p>
           ) : (
             <div className="text-red-700">
-              <p className="font-bold">
-                ⚠️ {ERROR_LABEL[health?.printer.problem || ""] || "Printer belum siap"}
-              </p>
+              <p className="font-bold">⚠️ {ERROR_LABEL[health?.printer.problem || ""] || "Printer belum siap"}</p>
               {health?.printer.problem && (
-                <p className="text-gray-600 mt-1 font-mono text-[10px]">
-                  {health.printer.problem}
-                </p>
+                <p className="text-gray-600 mt-1 font-mono text-[10px]">{health.printer.problem}</p>
               )}
             </div>
           )}
         </div>
 
-        {/* ---------- PREVIEW ---------- */}
+        {/* PREVIEW — pakai `resolved` & formatJakarta */}
         <div className="p-5 overflow-y-auto flex-1">
           <div className="font-mono text-xs text-black">
             <div className="text-center mb-4">
-              <h2 className="font-bold text-lg uppercase">HOTEL BELITANG</h2>
-              <p>Jl. Raya Belitang No. 123</p>
-              <p>Telp: 0812-3456-7890</p>
+              <h2 className="font-bold text-lg uppercase">{resolved.name}</h2>
+              <p>{resolved.address}</p>
+              <p>Telp: {resolved.phone}</p>
               <p className="mt-2">--------------------------------</p>
             </div>
 
@@ -250,7 +257,7 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
               </div>
               <div className="flex justify-between">
                 <span>Waktu</span>
-                <span>{new Date(order.created_at * 1000).toLocaleString("id-ID")}</span>
+                <span>{formatJakarta(order.created_at)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tipe</span>
@@ -324,7 +331,6 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
           </div>
         </div>
 
-        {/* ---------- RESULT MESSAGE ---------- */}
         {result && (
           <div
             className={`mx-4 mb-2 p-3 rounded text-xs ${
@@ -336,13 +342,10 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
             <p className="font-bold">
               {result.type === "success" ? "✅" : "❌"} {result.text}
             </p>
-            {result.fix && (
-              <p className="mt-1 text-gray-700">💡 {result.fix}</p>
-            )}
+            {result.fix && <p className="mt-1 text-gray-700">💡 {result.fix}</p>}
           </div>
         )}
 
-        {/* ---------- BUTTONS ---------- */}
         <div className="p-4 border-t flex gap-2">
           <button
             onClick={onClose}
@@ -363,11 +366,7 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
             disabled={!canPrint}
             className="flex-1 px-4 py-2 text-white bg-coffee-500 rounded font-bold hover:bg-coffee-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {printing ? (
-              <>⏳ Mencetak...</>
-            ) : (
-              <>🖨️ Cetak</>
-            )}
+            {printing ? <>⏳ Mencetak...</> : <>🖨️ Cetak</>}
           </button>
         </div>
       </div>
