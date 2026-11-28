@@ -179,7 +179,7 @@ export default function PrintStruk({ order, onClose }: PrintStrukProps) {
             <span>Rp {order.total_amount.toLocaleString("id-ID")}</span>
           </div>
 
-          <p className="text-center text-xs mt-6">Terima Kasih Atas Kunjungan Anda</p>
+          <p className="text-center text-xs mt-6">Terima Kasih Atas Kunjungan Anda..</p>
         </div>
 
         {/* Tombol Aksi */}
